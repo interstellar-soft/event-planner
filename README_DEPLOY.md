@@ -1,0 +1,56 @@
+# Tony Makhlouf Photography Website
+
+Dynamic MVP for Tony Makhlouf Photography event packages, digital invitations, RSVP storage, media quote requests, and admin review.
+
+## Run locally
+
+Use Node 18+.
+
+```bash
+npm start
+```
+
+On this Codex desktop workspace, you can also run:
+
+```powershell
+.\start-local.ps1
+```
+
+Then open:
+
+- Website: `http://localhost:3000`
+- Admin: `http://localhost:3000/admin`
+
+Default admin password for local development is:
+
+```text
+tony-admin
+```
+
+Set `ADMIN_PASSWORD` in production.
+
+## Before deploying
+
+1. Confirm WhatsApp is `+96170191294` in `data.js`.
+2. Confirm Instagram is `https://www.instagram.com/capturedbytonymakhlouf?igsh=cDlibWNtdzJubmE3` in `data.js`.
+3. Replace files in `assets/portfolio/` with Tony's real work when ready, keeping the same filenames for the fastest swap:
+   - `wedding-placeholder.png`
+   - `baptism-placeholder.png`
+   - `business-placeholder.png`
+4. Set a strong `ADMIN_PASSWORD`.
+
+## Deploy
+
+This is no longer a static site. Use a Node host such as Render, Railway, Fly.io, or a VPS. A `render.yaml` blueprint is included.
+
+Render/Railway settings:
+
+- Build command: leave empty or `npm install`
+- Start command: `npm start`
+- Environment variables:
+  - `ADMIN_PASSWORD=<strong password>`
+  - `PORT` is usually provided by the host
+
+## Current limitations
+
+This MVP stores data in `data/db.json`. That works for a small private deployment, but production at scale should move to PostgreSQL/Supabase and object storage for uploaded galleries.

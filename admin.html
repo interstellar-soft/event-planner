@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tony Makhlouf Photography Admin</title>
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Tony Makhlouf Photography home">
+        <span class="brand-mark">T</span>
+        <span>Tony Makhlouf Admin</span>
+      </a>
+      <nav class="nav-links" aria-label="Admin navigation">
+        <a href="/">Website</a>
+        <a href="#invitations">Invitations</a>
+        <a href="#bookings">Bookings</a>
+        <a href="#rsvps">RSVPs</a>
+      </nav>
+      <button class="nav-action" id="logoutButton" type="button">Logout</button>
+    </header>
+
+    <main class="admin-page">
+      <section class="admin-shell">
+        <div class="admin-header">
+          <div>
+            <p class="kicker">Dynamic admin</p>
+            <h1>Manage event requests and invitations</h1>
+            <p>Generated invitations, booking inquiries, and RSVP responses are stored in `data/db.json`.</p>
+          </div>
+          <a class="button small" href="/">Open Website</a>
+        </div>
+
+        <section class="admin-card" id="loginPanel">
+          <h2>Sign in</h2>
+          <form class="admin-form" id="loginForm">
+            <label>
+              Admin password
+              <input id="adminPassword" type="password" autocomplete="current-password" required />
+            </label>
+            <button class="button primary" type="submit">Sign in</button>
+            <p class="admin-alert" id="loginMessage" role="status"></p>
+          </form>
+        </section>
+
+        <section class="admin-dashboard" id="adminDashboard" hidden>
+          <div class="stats-grid">
+            <article><span id="adminInviteCount">0</span><p>Invitations</p></article>
+            <article><span id="adminBookingCount">0</span><p>Bookings</p></article>
+            <article><span id="adminRsvpCount">0</span><p>RSVPs</p></article>
+          </div>
+
+          <section class="admin-card" id="invitations">
+            <div class="admin-section-heading">
+              <h2>Generated invitations</h2>
+              <button class="button small" id="refreshAdmin" type="button">Refresh</button>
+            </div>
+            <div class="admin-list" id="invitationList"></div>
+          </section>
+
+          <section class="admin-card" id="bookings">
+            <h2>Booking requests</h2>
+            <div class="admin-list" id="bookingList"></div>
+          </section>
+
+          <section class="admin-card" id="rsvps">
+            <h2>RSVP responses</h2>
+            <div class="admin-list" id="rsvpList"></div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="/admin.js"></script>
+  </body>
+</html>

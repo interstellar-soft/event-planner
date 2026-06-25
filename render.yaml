@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: tony-event-platform
+    env: node
+    plan: starter
+    buildCommand: ""
+    startCommand: "npm start"
+    envVars:
+      - key: ADMIN_PASSWORD
+        sync: false
