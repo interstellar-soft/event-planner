@@ -34,6 +34,7 @@ const bundleGrid = document.querySelector("#bundleGrid");
 const invitationPricingGrid = document.querySelector("#invitationPricingGrid");
 const orderForm = document.querySelector("#orderForm");
 const mediaBookingForm = document.querySelector("#mediaBookingForm");
+let selectedInvitationTheme = "ivory";
 
 function getPathValue(source, path) {
   return path.split(".").reduce((value, key) => value?.[key], source);
@@ -52,7 +53,7 @@ function applyContentText() {
 function renderTemplates() {
   templateGrid.innerHTML = defaultTemplates
     .map(
-      (template) => `
+      (template, index) => `
         <article class="template-card">
           <div class="template-art" style="background:${template.background}">
             <div style="background:${template.card}">${template.initials}</div>
@@ -61,7 +62,7 @@ function renderTemplates() {
             <h3>${template.name}</h3>
             <p>${template.description}</p>
             <p><strong>${template.price}</strong></p>
-            <button class="button" type="button" data-template="${template.name}">Use this style</button>
+            <button class="button" type="button" data-template="${template.name}" data-theme="${["ivory", "midnight", "sage"][index]}">Use this style</button>
           </footer>
         </article>
       `
@@ -282,6 +283,7 @@ document.addEventListener("click", (event) => {
 templateGrid.addEventListener("click", (event) => {
   const button = event.target.closest("[data-template]");
   if (!button) return;
+  selectedInvitationTheme = button.dataset.theme || "ivory";
   document.querySelector("#eventTitle").value = `${button.dataset.template} Celebration`;
   updatePreview();
   document.querySelector("#order").scrollIntoView({ behavior: "smooth" });
@@ -290,7 +292,7 @@ templateGrid.addEventListener("click", (event) => {
 orderForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const status = document.querySelector("#invitationStatus");
-  status.textContent = "Generating invitation link...";
+  status.textContent = "Sending your invitation request...";
   updatePreview();
   try {
     const result = await postJson("/api/invitations", {
@@ -300,13 +302,13 @@ orderForm.addEventListener("submit", async (event) => {
       venue: document.querySelector("#venue").value,
       mapUrl: document.querySelector("#mapUrl").value,
       packageName: document.querySelector("#packageName").value,
-      language: getCheckedValues(orderForm).includes("Bilingual Arabic / English") ? "Bilingual" : "English"
+      language: getCheckedValues(orderForm).includes("Bilingual Arabic / English") ? "Bilingual" : "English",
+      clientName: document.querySelector("#inviteClientName").value,
+      clientPhone: document.querySelector("#inviteClientPhone").value,
+      theme: selectedInvitationTheme
     });
-    const link = document.querySelector("#generatedInviteLink");
-    link.href = result.url;
-    link.textContent = result.url;
     document.querySelector("#generatedInviteCard").hidden = false;
-    status.textContent = "Invitation generated. Open the link to view the live invitation page.";
+    status.textContent = result.message || "Request received. Tony will prepare your invitation preview.";
   } catch (error) {
     status.textContent = error.message;
   }

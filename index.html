@@ -172,6 +172,14 @@
             <h2>Request a digital invitation</h2>
           </div>
           <label>
+            Your name
+            <input id="inviteClientName" name="inviteClientName" autocomplete="name" required />
+          </label>
+          <label>
+            WhatsApp number
+            <input id="inviteClientPhone" name="inviteClientPhone" type="tel" autocomplete="tel" required />
+          </label>
+          <label>
             Event title
             <input id="eventTitle" name="eventTitle" value="Maya & Karim" required />
           </label>
@@ -207,7 +215,7 @@
             <label class="check"><input type="checkbox" value="Guest name links" checked /> Guest links</label>
             <label class="check"><input type="checkbox" value="Custom QR card" /> QR card</label>
           </fieldset>
-          <button class="button primary full" type="submit">Generate Invitation Link</button>
+          <button class="button primary full" type="submit">Submit Invitation Request</button>
           <button class="button outline full" id="invitationWhatsApp" type="button">Request Invitation Quote</button>
           <p class="form-note" id="invitationStatus" role="status"></p>
         </form>
@@ -222,8 +230,8 @@
             <a class="button invite-button" href="#booking">Request Quote</a>
           </div>
           <div class="qr-card" id="generatedInviteCard" hidden>
-            <span>Generated invite</span>
-            <a id="generatedInviteLink" href="#" target="_blank" rel="noopener noreferrer">Open invitation</a>
+            <span>Request received</span>
+            <strong>Tony will prepare your private preview.</strong>
           </div>
           <div class="qr-card">
             <img id="qrImage" alt="Invitation QR code" />

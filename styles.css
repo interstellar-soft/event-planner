@@ -712,7 +712,8 @@ legend {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   min-height: 48px;
   border: 1px solid #d8e0de;
@@ -724,7 +725,8 @@ select {
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   outline: 0;
   border-color: var(--sage);
   box-shadow: 0 0 0 4px rgba(47, 123, 104, 0.16);
@@ -1208,11 +1210,106 @@ select:focus {
   font-weight: 850;
 }
 
+.invitation-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+}
+
+.admin-card-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-card-heading strong {
+  margin: 0;
+}
+
+.status-pill {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #e5e9e8;
+  color: #536066;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.status-pill.status-approved {
+  background: #fff1c9;
+  color: #795d12;
+}
+
+.status-pill.status-published {
+  background: var(--sage-soft);
+  color: var(--sage);
+}
+
+.draft-note {
+  color: #7d898f;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.invitation-editor {
+  scroll-margin-top: 110px;
+  border-top: 4px solid var(--sage);
+}
+
+.icon-button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.editor-client-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  border-radius: 8px;
+  background: #f0f5f2;
+  padding: 14px 16px;
+  color: var(--muted-ink);
+}
+
+.editor-client-summary strong {
+  color: var(--ink);
+}
+
+.editor-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.editor-wide {
+  grid-column: 1 / -1;
+}
+
+.editor-fields textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.editor-actions {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
 .invite-public-body {
   min-height: 100vh;
   background:
     linear-gradient(180deg, rgba(16, 23, 27, 0.32), rgba(16, 23, 27, 0.88)),
-    url("assets/hero-invitation.png") center / cover fixed;
+    var(--invite-cover, url("assets/hero-invitation.png")) center / cover fixed;
 }
 
 .invite-public-page {
@@ -1223,6 +1320,7 @@ select:focus {
 }
 
 .invite-public-card {
+  position: relative;
   width: min(560px, 100%);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
@@ -1230,6 +1328,90 @@ select:focus {
   padding: clamp(24px, 5vw, 44px);
   text-align: center;
   box-shadow: 0 34px 90px rgba(0, 0, 0, 0.28);
+}
+
+.invite-preview-banner {
+  margin: -44px -44px 28px;
+  border-radius: 8px 8px 0 0;
+  background: var(--ink);
+  color: var(--white);
+  padding: 10px 14px;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.invite-hosts {
+  margin: 22px 0 8px;
+  color: var(--muted-ink);
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.invite-message {
+  max-width: 430px;
+  margin: 0 auto 24px;
+  color: var(--muted-ink);
+  line-height: 1.7;
+}
+
+.invite-details {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin: 20px 0;
+  padding: 15px 0;
+  font-weight: 800;
+}
+
+.invite-details p {
+  margin: 6px 0;
+}
+
+.invite-audio {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.invite-deadline {
+  color: var(--gold);
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.invite-theme-midnight .invite-public-card {
+  border-color: rgba(214, 174, 101, 0.52);
+  background: rgba(17, 23, 27, 0.94);
+  color: #fffaf0;
+}
+
+.invite-theme-midnight .invite-hosts,
+.invite-theme-midnight .invite-message,
+.invite-theme-midnight .invite-details {
+  color: rgba(255, 250, 240, 0.74);
+}
+
+.invite-theme-midnight .invite-details {
+  border-color: rgba(214, 174, 101, 0.34);
+}
+
+.invite-theme-midnight .public-rsvp-form {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.invite-theme-midnight .public-rsvp-form label {
+  color: #fffaf0;
+}
+
+.invite-theme-sage .invite-public-card {
+  border-color: rgba(47, 123, 104, 0.42);
+  background: rgba(244, 250, 246, 0.94);
+}
+
+.invite-theme-sage .invite-kicker,
+.invite-theme-sage .invite-deadline {
+  color: var(--sage);
 }
 
 .invite-public-card h1 {
@@ -1344,5 +1526,18 @@ select:focus {
   .footer {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .editor-fields,
+  .invitation-row {
+    grid-template-columns: 1fr;
+  }
+
+  .invitation-row .button {
+    width: 100%;
+  }
+
+  .invite-preview-banner {
+    margin: -24px -24px 24px;
   }
 }

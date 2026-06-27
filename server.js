@@ -24,7 +24,11 @@ const mimeTypes = {
 
 function readDb() {
   ensureDb();
-  return JSON.parse(fs.readFileSync(dbPath, "utf8"));
+  const db = JSON.parse(fs.readFileSync(dbPath, "utf8"));
+  db.invitations = Array.isArray(db.invitations) ? db.invitations : [];
+  db.rsvps = Array.isArray(db.rsvps) ? db.rsvps : [];
+  db.bookings = Array.isArray(db.bookings) ? db.bookings : [];
+  return db;
 }
 
 function writeDb(db) {
@@ -132,6 +136,22 @@ function escapeHtml(value) {
   });
 }
 
+function safePublicUrl(value, { allowLocal = false } = {}) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (allowLocal && raw.startsWith("/assets/")) return raw;
+  try {
+    const url = new URL(raw);
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
+function invitationStatus(value) {
+  return ["draft", "approved", "published"].includes(value) ? value : "draft";
+}
+
 function serveFile(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const requested = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
@@ -153,8 +173,14 @@ function serveFile(req, res) {
   });
 }
 
-function invitePage(invite) {
+function invitePage(invite, isPreview = false) {
   const title = escapeHtml(invite.title);
+  const theme = ["ivory", "midnight", "sage"].includes(invite.theme) ? invite.theme : "ivory";
+  const coverImageUrl = safePublicUrl(invite.coverImageUrl, { allowLocal: true });
+  const musicUrl = safePublicUrl(invite.musicUrl);
+  const hostNames = escapeHtml(invite.hostNames || "Together with their families");
+  const message = escapeHtml(invite.message || "We would be delighted to celebrate this special occasion with you.");
+  const backgroundStyle = coverImageUrl ? ` style="--invite-cover: url('${escapeHtml(coverImageUrl)}')"` : "";
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -163,14 +189,22 @@ function invitePage(invite) {
     <title>${title} | Digital Invitation</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body class="invite-public-body">
+  <body class="invite-public-body invite-theme-${theme}"${backgroundStyle}>
     <main class="invite-public-page">
       <section class="invite-public-card">
+        ${isPreview ? `<div class="invite-preview-banner">Private admin preview</div>` : ""}
         <p class="invite-kicker">${escapeHtml(invite.eventType || "Event Invitation")}</p>
+        <p class="invite-hosts">${hostNames}</p>
         <h1>${title}</h1>
+        <p class="invite-message">${message}</p>
+        <div class="invite-details">
         <p>${escapeHtml(invite.date)}</p>
         <p>${escapeHtml(invite.venue)}</p>
+        </div>
         ${invite.mapUrl ? `<a class="button outline" href="${escapeHtml(invite.mapUrl)}" target="_blank" rel="noopener noreferrer">Open Location</a>` : ""}
+        ${musicUrl ? `<audio class="invite-audio" controls preload="none" src="${escapeHtml(musicUrl)}">Your browser does not support audio playback.</audio>` : ""}
+        ${invite.rsvpDeadline ? `<p class="invite-deadline">Kindly respond by ${escapeHtml(invite.rsvpDeadline)}</p>` : ""}
+        ${invite.showRsvp === false ? "" : `
         <form class="rsvp-form public-rsvp-form" id="publicRsvpForm">
           <input type="hidden" id="inviteId" value="${escapeHtml(invite.id)}" />
           <label>Full name <input id="rsvpName" required /></label>
@@ -185,9 +219,10 @@ function invitePage(invite) {
           <button class="button primary full" type="submit">Send RSVP</button>
           <p class="form-note" id="rsvpStatusMessage" role="status"></p>
         </form>
+        `}
       </section>
     </main>
-    <script src="/invite.js"></script>
+    ${invite.showRsvp === false ? "" : `<script src="/invite.js"></script>`}
   </body>
 </html>`;
 }
@@ -248,12 +283,57 @@ async function handleApi(req, res, pathname) {
         mapUrl: String(body.mapUrl || "").trim(),
         packageName: String(body.packageName || "").trim(),
         language: String(body.language || "English").trim(),
-        status: "live",
+        clientName: String(body.clientName || "").trim(),
+        clientPhone: String(body.clientPhone || "").trim(),
+        hostNames: "Together with their families",
+        message: "We would be delighted to celebrate this special occasion with you.",
+        theme: ["ivory", "midnight", "sage"].includes(body.theme) ? body.theme : "ivory",
+        coverImageUrl: "",
+        musicUrl: "",
+        rsvpDeadline: "",
+        showRsvp: true,
+        status: "draft",
         createdAt: new Date().toISOString()
       };
       db.invitations.unshift(invitation);
       writeDb(db);
-      json(res, 201, { invitation, url: `/invite/${invitation.slug}` });
+      json(res, 201, { invitation, message: "Invitation request received." });
+      return;
+    }
+
+    const invitationUpdateMatch = pathname.match(/^\/api\/admin\/invitations\/([^/]+)$/);
+    if (req.method === "PUT" && invitationUpdateMatch) {
+      if (!isAuthed(req)) {
+        json(res, 401, { error: "Unauthorized" });
+        return;
+      }
+      const body = await readBody(req);
+      const db = readDb();
+      const invitation = db.invitations.find((item) => item.id === decodeURIComponent(invitationUpdateMatch[1]));
+      if (!invitation) {
+        json(res, 404, { error: "Invitation not found" });
+        return;
+      }
+      const fields = [
+        "title", "eventType", "date", "venue", "mapUrl", "packageName", "language",
+        "clientName", "clientPhone", "hostNames", "message", "coverImageUrl", "musicUrl", "rsvpDeadline"
+      ];
+      fields.forEach((field) => {
+        if (Object.prototype.hasOwnProperty.call(body, field)) invitation[field] = String(body[field] || "").trim();
+      });
+      if (Object.prototype.hasOwnProperty.call(body, "theme")) {
+        invitation.theme = ["ivory", "midnight", "sage"].includes(body.theme) ? body.theme : "ivory";
+      }
+      if (Object.prototype.hasOwnProperty.call(body, "showRsvp")) invitation.showRsvp = Boolean(body.showRsvp);
+      if (Object.prototype.hasOwnProperty.call(body, "status")) invitation.status = invitationStatus(body.status);
+      invitation.updatedAt = new Date().toISOString();
+      if (invitation.status === "published" && !invitation.publishedAt) invitation.publishedAt = invitation.updatedAt;
+      writeDb(db);
+      json(res, 200, {
+        invitation,
+        previewUrl: `/invite/${invitation.slug}?preview=1`,
+        publicUrl: invitation.status === "published" ? `/invite/${invitation.slug}` : null
+      });
       return;
     }
 
@@ -326,7 +406,12 @@ const server = http.createServer((req, res) => {
       send(res, 404, "Invitation not found", { "Content-Type": "text/plain; charset=utf-8" });
       return;
     }
-    send(res, 200, invitePage(invite), { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+    const isPreview = url.searchParams.get("preview") === "1" && isAuthed(req);
+    if (invitationStatus(invite.status) !== "published" && !isPreview) {
+      send(res, 404, "This invitation has not been published yet.", { "Content-Type": "text/plain; charset=utf-8" });
+      return;
+    }
+    send(res, 200, invitePage(invite, isPreview), { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
     return;
   }
 
