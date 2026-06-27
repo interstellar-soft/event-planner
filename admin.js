@@ -207,6 +207,21 @@ async function reviewPayment(status) {
   }
 }
 
+async function openPrivatePreview() {
+  if (!activeInvitation) return;
+  const previewWindow = window.open("about:blank", "_blank");
+  const status = normalizedStatus(activeInvitation);
+  const result = await saveInvitation(status, "Changes saved. Opening private preview...");
+  if (result && previewWindow) {
+    previewWindow.opener = null;
+    previewWindow.location = result.previewUrl;
+  } else if (result) {
+    window.location.href = result.previewUrl;
+  } else if (previewWindow) {
+    previewWindow.close();
+  }
+}
+
 function editorPayload(status) {
   return {
     title: document.querySelector("#editorTitle").value,
@@ -316,6 +331,7 @@ document.querySelector("#generateCover").addEventListener("click", () => generat
 document.querySelector("#generateMusic").addEventListener("click", () => generateAsset("music"));
 document.querySelector("#approvePayment").addEventListener("click", () => reviewPayment("paid"));
 document.querySelector("#rejectPayment").addEventListener("click", () => reviewPayment("rejected"));
+document.querySelector("#previewBeforeApproval").addEventListener("click", openPrivatePreview);
 
 document.querySelector("#generatedCoverList").addEventListener("click", async (event) => {
   const button = event.target.closest("[data-use-cover]");
@@ -331,11 +347,7 @@ document.querySelector("#generatedTrackList").addEventListener("click", async (e
   await saveInvitation(normalizedStatus(activeInvitation), "Soundtrack selected.");
 });
 
-document.querySelector("#previewInvitation").addEventListener("click", async () => {
-  const status = normalizedStatus(activeInvitation || {});
-  const result = await saveInvitation(status, "Changes saved. Opening private preview...");
-  if (result) window.open(result.previewUrl, "_blank", "noopener");
-});
+document.querySelector("#previewInvitation").addEventListener("click", openPrivatePreview);
 
 document.querySelector("#copyInvitationLink").addEventListener("click", async () => {
   if (!activeInvitation || normalizedStatus(activeInvitation) !== "published") return;
