@@ -310,6 +310,7 @@ orderForm.addEventListener("submit", async (event) => {
       theme: selectedInvitationTheme
     });
     document.querySelector("#generatedInviteCard").hidden = false;
+    document.querySelector("#clientStudioLink").href = result.clientUrl;
     status.textContent = result.message || "Request received. Tony will prepare your invitation preview.";
   } catch (error) {
     status.textContent = error.message;

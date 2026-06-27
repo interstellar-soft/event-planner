@@ -54,9 +54,13 @@ Render/Railway settings:
   - `CLOUDINARY_CLOUD_NAME=<Cloudinary cloud name>`
   - `CLOUDINARY_API_KEY=<Cloudinary API key>`
   - `CLOUDINARY_API_SECRET=<Cloudinary API secret>`
+  - `WHISH_PAYMENT_NUMBER=<Tony's Whish recipient number>`
+  - `BANK_PAYMENT_DETAILS=<bank name, account/IBAN, and recipient>`
   - `PORT` is usually provided by the host
 
 The AI controls remain disabled until their provider keys are configured. Cloudinary is strongly recommended in production so generated covers and soundtracks survive host restarts and redeployments. Without Cloudinary, generated files are stored temporarily in `generated/`.
+
+Client purchases currently use manual verification. A client submits a Whish or bank transfer reference from the private studio, then Tony approves or rejects it from `/admin`. Approval unlocks full cover quality, music generation, RSVP controls, and publishing.
 
 Optional generation controls:
 

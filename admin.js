@@ -50,6 +50,7 @@ function renderAdmin() {
   document.querySelector("#invitationList").innerHTML =
     adminData.invitations.map((invitation) => {
       const status = normalizedStatus(invitation);
+      const payment = invitation.payment?.status || "unpaid";
       const url = `/invite/${invitation.slug}`;
       const rsvps = adminData.rsvps.filter((rsvp) => rsvp.invitationId === invitation.id);
       return `<article class="admin-list-card invitation-row">
@@ -57,6 +58,7 @@ function renderAdmin() {
           <div class="admin-card-heading">
             <strong>${escapeHtml(invitation.title)}</strong>
             <span class="status-pill status-${status}">${escapeHtml(status)}</span>
+            <span class="status-pill payment-${payment}">${escapeHtml(payment)}</span>
           </div>
           <p>${escapeHtml(invitation.date)} &middot; ${escapeHtml(invitation.venue)}</p>
           <p>${escapeHtml(invitation.clientName || "Client not provided")} &middot; ${escapeHtml(invitation.clientPhone || "No phone")}</p>
@@ -91,7 +93,8 @@ function openEditor(invitation) {
   activeInvitation = invitation;
   document.querySelector("#editorInviteId").value = invitation.id;
   document.querySelector("#editorHeading").textContent = invitation.title || "Edit invitation";
-  document.querySelector("#editorClientSummary").innerHTML = `<strong>${escapeHtml(invitation.clientName || "Client")}</strong><span>${escapeHtml(invitation.clientPhone || "No WhatsApp number")}</span><span>${escapeHtml(invitation.packageName || "No package selected")}</span>`;
+  document.querySelector("#editorClientSummary").innerHTML = `<strong>${escapeHtml(invitation.clientName || "Client")}</strong><span>${escapeHtml(invitation.clientPhone || "No WhatsApp number")}</span><span>${escapeHtml(invitation.packageName || "No package selected")}</span><a href="/studio/${escapeHtml(invitation.clientToken)}" target="_blank" rel="noopener noreferrer">Open client studio</a>`;
+  renderAdminPayment(invitation);
   document.querySelector("#editorTitle").value = invitation.title || "";
   document.querySelector("#editorEventType").value = invitation.eventType || "";
   document.querySelector("#editorDate").value = invitation.date || "";
@@ -111,6 +114,15 @@ function openEditor(invitation) {
   renderGenerationStudio();
   editor.hidden = false;
   editor.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderAdminPayment(invitation) {
+  const payment = invitation.payment || { status: "unpaid" };
+  document.querySelector("#adminPaymentStatus").textContent = payment.status === "paid" ? "Paid" : payment.status === "submitted" ? "Verification requested" : payment.status === "rejected" ? "Rejected" : "Unpaid";
+  document.querySelector("#adminPaymentReference").textContent = payment.reference
+    ? `${payment.method === "bank" ? "Bank" : "Whish"} · ${payment.reference}`
+    : `${invitation.packagePrice || ""} ${invitation.packageCurrency || "USD"}`.trim();
+  document.querySelector("#adminPaymentActions").hidden = payment.status !== "submitted";
 }
 
 function defaultCoverPrompt(invitation) {
@@ -175,8 +187,24 @@ function syncActiveInvitation(invitation) {
   if (index >= 0) adminData.invitations[index] = invitation;
   document.querySelector("#editorCoverImage").value = invitation.coverImageUrl || "";
   document.querySelector("#editorMusicUrl").value = invitation.musicUrl || "";
+  renderAdminPayment(invitation);
   renderAdmin();
   renderGenerationStudio();
+}
+
+async function reviewPayment(status) {
+  if (!activeInvitation) return;
+  editorStatus.textContent = status === "paid" ? "Approving payment..." : "Rejecting payment...";
+  try {
+    const result = await api(`/api/admin/invitations/${encodeURIComponent(activeInvitation.id)}/payment`, {
+      method: "POST",
+      body: JSON.stringify({ status })
+    });
+    syncActiveInvitation(result.invitation);
+    editorStatus.textContent = status === "paid" ? "Payment approved. The client now has full access." : "Payment rejected. The client can submit a corrected reference.";
+  } catch (error) {
+    editorStatus.textContent = error.message;
+  }
 }
 
 function editorPayload(status) {
@@ -286,6 +314,8 @@ document.querySelectorAll("[data-save-status]").forEach((button) => {
 
 document.querySelector("#generateCover").addEventListener("click", () => generateAsset("cover"));
 document.querySelector("#generateMusic").addEventListener("click", () => generateAsset("music"));
+document.querySelector("#approvePayment").addEventListener("click", () => reviewPayment("paid"));
+document.querySelector("#rejectPayment").addEventListener("click", () => reviewPayment("rejected"));
 
 document.querySelector("#generatedCoverList").addEventListener("click", async (event) => {
   const button = event.target.closest("[data-use-cover]");

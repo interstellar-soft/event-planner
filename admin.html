@@ -71,6 +71,17 @@
             <form class="admin-form" id="invitationEditorForm">
               <input id="editorInviteId" type="hidden" />
               <div class="editor-client-summary" id="editorClientSummary"></div>
+              <section class="admin-payment-review" id="adminPaymentReview">
+                <div>
+                  <p class="kicker">Payment</p>
+                  <strong id="adminPaymentStatus">Unpaid</strong>
+                  <span id="adminPaymentReference"></span>
+                </div>
+                <div class="admin-actions" id="adminPaymentActions" hidden>
+                  <button class="button primary" id="approvePayment" type="button">Mark Paid</button>
+                  <button class="button outline" id="rejectPayment" type="button">Reject</button>
+                </div>
+              </section>
               <div class="editor-fields">
                 <label>Event title <input id="editorTitle" required /></label>
                 <label>Event type <input id="editorEventType" required /></label>

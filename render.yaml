@@ -18,3 +18,7 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: WHISH_PAYMENT_NUMBER
+        sync: false
+      - key: BANK_PAYMENT_DETAILS
+        sync: false
