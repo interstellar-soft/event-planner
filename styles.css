@@ -1305,6 +1305,123 @@ textarea:focus {
   padding-top: 18px;
 }
 
+.generator-panel {
+  display: grid;
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  padding: 24px 0 4px;
+}
+
+.generator-heading,
+.generator-controls {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.generator-heading h3 {
+  margin: 4px 0 0;
+  font-size: 1.25rem;
+}
+
+.generator-state {
+  display: inline-flex;
+  border-radius: 999px;
+  background: #f8e5df;
+  color: #914535;
+  padding: 6px 10px;
+  font-size: 0.74rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.generator-state.ready {
+  background: var(--sage-soft);
+  color: var(--sage);
+}
+
+.generator-controls label {
+  width: min(220px, 100%);
+}
+
+.generator-controls .button {
+  min-width: 190px;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.generated-cover-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.generated-cover {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #edf1ef;
+}
+
+.generated-cover.selected,
+.generated-track.selected {
+  border-color: var(--sage);
+}
+
+.generated-cover img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.generated-cover .button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  width: calc(100% - 16px);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  backdrop-filter: blur(10px);
+}
+
+.generated-track-list {
+  display: grid;
+  gap: 10px;
+}
+
+.generated-track {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.generated-track audio {
+  width: 100%;
+  min-width: 0;
+}
+
+.generator-empty {
+  margin: 0;
+  border: 1px dashed #cbd4d1;
+  border-radius: 8px;
+  color: #7d898f;
+  padding: 18px;
+  text-align: center;
+  font-weight: 800;
+}
+
 .invite-public-body {
   min-height: 100vh;
   background:
@@ -1539,5 +1656,24 @@ textarea:focus {
 
   .invite-preview-banner {
     margin: -24px -24px 24px;
+  }
+
+  .generator-heading,
+  .generator-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .generator-controls label,
+  .generator-controls .button {
+    width: 100%;
+  }
+
+  .generated-cover-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .generated-track {
+    grid-template-columns: 1fr;
   }
 }

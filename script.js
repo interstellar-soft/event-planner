@@ -305,6 +305,8 @@ orderForm.addEventListener("submit", async (event) => {
       language: getCheckedValues(orderForm).includes("Bilingual Arabic / English") ? "Bilingual" : "English",
       clientName: document.querySelector("#inviteClientName").value,
       clientPhone: document.querySelector("#inviteClientPhone").value,
+      coverDirection: document.querySelector("#inviteVisualMood").value,
+      musicDirection: document.querySelector("#inviteMusicMood").value,
       theme: selectedInvitationTheme
     });
     document.querySelector("#generatedInviteCard").hidden = false;

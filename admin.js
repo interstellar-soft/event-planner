@@ -3,7 +3,7 @@ const dashboard = document.querySelector("#adminDashboard");
 const loginMessage = document.querySelector("#loginMessage");
 const editor = document.querySelector("#invitationEditor");
 const editorStatus = document.querySelector("#editorMessageStatus");
-let adminData = { invitations: [], bookings: [], rsvps: [] };
+let adminData = { invitations: [], bookings: [], rsvps: [], generationConfig: {} };
 let activeInvitation = null;
 
 function escapeHtml(value) {
@@ -103,11 +103,80 @@ function openEditor(invitation) {
   document.querySelector("#editorMessage").value = invitation.message || "";
   document.querySelector("#editorCoverImage").value = invitation.coverImageUrl || "";
   document.querySelector("#editorMusicUrl").value = invitation.musicUrl || "";
+  document.querySelector("#coverPrompt").value = invitation.generatedCovers?.[0]?.prompt || defaultCoverPrompt(invitation);
+  document.querySelector("#musicPrompt").value = invitation.generatedTracks?.[0]?.prompt || defaultMusicPrompt(invitation);
   document.querySelector("#editorShowRsvp").checked = invitation.showRsvp !== false;
   document.querySelector("#copyInvitationLink").hidden = normalizedStatus(invitation) !== "published";
   editorStatus.textContent = `Current status: ${normalizedStatus(invitation)}`;
+  renderGenerationStudio();
   editor.hidden = false;
   editor.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function defaultCoverPrompt(invitation) {
+  if (invitation.coverDirection) return invitation.coverDirection;
+  const directions = {
+    "Wedding Celebration": "Romantic evening garden, soft florals, candlelight, refined ivory and gold details",
+    Baptism: "Serene daylight, delicate white flowers, pale blue accents, peaceful and luminous",
+    Engagement: "Elegant romantic setting, modern florals, warm ambient light, celebratory details",
+    Birthday: "Joyful sophisticated celebration, layered color, festive details, polished editorial style",
+    "Corporate Event": "Modern architectural setting, crisp lighting, sophisticated brand-neutral details"
+  };
+  return directions[invitation.eventType] || "Elegant celebration, refined details, warm light, premium editorial style";
+}
+
+function defaultMusicPrompt(invitation) {
+  if (invitation.musicDirection) return invitation.musicDirection;
+  const directions = {
+    "Wedding Celebration": "Romantic Lebanese-inspired instrumental with gentle oud, piano, and cinematic strings",
+    Baptism: "Peaceful luminous instrumental with piano, soft strings, and delicate acoustic textures",
+    Engagement: "Warm romantic instrumental with oud, piano, subtle percussion, and uplifting strings",
+    Birthday: "Joyful modern instrumental with elegant percussion, bright piano, and warm celebratory energy",
+    "Corporate Event": "Polished modern instrumental with subtle electronic rhythm, piano, and confident energy"
+  };
+  return directions[invitation.eventType] || "Warm elegant instrumental with piano, strings, and subtle regional acoustic textures";
+}
+
+function renderGenerationStudio() {
+  if (!activeInvitation) return;
+  const config = adminData.generationConfig || {};
+  const usage = activeInvitation.generationUsage || { covers: 0, music: 0 };
+  const coverRemaining = Math.max(0, (config.maxCoverGenerations || 6) - (usage.covers || 0));
+  const musicRemaining = Math.max(0, (config.maxMusicGenerations || 3) - (usage.music || 0));
+  const coverState = document.querySelector("#coverGeneratorState");
+  const musicState = document.querySelector("#musicGeneratorState");
+  coverState.textContent = config.coverEnabled ? `${coverRemaining} generation${coverRemaining === 1 ? "" : "s"} left` : "Needs OpenAI key";
+  musicState.textContent = config.musicEnabled ? `${musicRemaining} generation${musicRemaining === 1 ? "" : "s"} left` : "Needs ElevenLabs key";
+  coverState.classList.toggle("ready", Boolean(config.coverEnabled));
+  musicState.classList.toggle("ready", Boolean(config.musicEnabled));
+  document.querySelector("#generateCover").disabled = !config.coverEnabled || coverRemaining === 0;
+  document.querySelector("#generateMusic").disabled = !config.musicEnabled || musicRemaining === 0;
+
+  const selectedCover = document.querySelector("#editorCoverImage").value;
+  document.querySelector("#generatedCoverList").innerHTML = (activeInvitation.generatedCovers || []).map((asset) => `
+    <article class="generated-cover ${asset.url === selectedCover ? "selected" : ""}">
+      <img src="${escapeHtml(asset.url)}" alt="Generated invitation cover option" />
+      <button class="button small" data-use-cover="${escapeHtml(asset.url)}" type="button">${asset.url === selectedCover ? "Selected" : "Use Cover"}</button>
+    </article>
+  `).join("") || `<p class="generator-empty">No generated cover yet.</p>`;
+
+  const selectedTrack = document.querySelector("#editorMusicUrl").value;
+  document.querySelector("#generatedTrackList").innerHTML = (activeInvitation.generatedTracks || []).map((asset) => `
+    <article class="generated-track ${asset.url === selectedTrack ? "selected" : ""}">
+      <audio controls preload="none" src="${escapeHtml(asset.url)}"></audio>
+      <button class="button small" data-use-music="${escapeHtml(asset.url)}" type="button">${asset.url === selectedTrack ? "Selected" : "Use Soundtrack"}</button>
+    </article>
+  `).join("") || `<p class="generator-empty">No generated soundtrack yet.</p>`;
+}
+
+function syncActiveInvitation(invitation) {
+  activeInvitation = invitation;
+  const index = adminData.invitations.findIndex((item) => item.id === invitation.id);
+  if (index >= 0) adminData.invitations[index] = invitation;
+  document.querySelector("#editorCoverImage").value = invitation.coverImageUrl || "";
+  document.querySelector("#editorMusicUrl").value = invitation.musicUrl || "";
+  renderAdmin();
+  renderGenerationStudio();
 }
 
 function editorPayload(status) {
@@ -136,10 +205,7 @@ async function saveInvitation(status, successMessage) {
       method: "PUT",
       body: JSON.stringify(editorPayload(status))
     });
-    activeInvitation = result.invitation;
-    const index = adminData.invitations.findIndex((item) => item.id === activeInvitation.id);
-    if (index >= 0) adminData.invitations[index] = activeInvitation;
-    renderAdmin();
+    syncActiveInvitation(result.invitation);
     document.querySelector("#editorHeading").textContent = activeInvitation.title;
     document.querySelector("#copyInvitationLink").hidden = normalizedStatus(activeInvitation) !== "published";
     editorStatus.textContent = successMessage;
@@ -147,6 +213,40 @@ async function saveInvitation(status, successMessage) {
   } catch (error) {
     editorStatus.textContent = error.message;
     return null;
+  }
+}
+
+async function generateAsset(kind) {
+  if (!activeInvitation) return;
+  const isCover = kind === "cover";
+  const button = document.querySelector(isCover ? "#generateCover" : "#generateMusic");
+  const message = document.querySelector(isCover ? "#coverGeneratorMessage" : "#musicGeneratorMessage");
+  const prompt = document.querySelector(isCover ? "#coverPrompt" : "#musicPrompt").value.trim();
+  if (prompt.length < 10) {
+    message.textContent = "Add a little more creative direction before generating.";
+    return;
+  }
+  const saved = await saveInvitation(normalizedStatus(activeInvitation), "Invitation details saved.");
+  if (!saved) return;
+  button.disabled = true;
+  button.textContent = isCover ? "Generating Cover..." : "Composing Soundtrack...";
+  message.textContent = isCover ? "Creating portrait artwork. This can take up to two minutes." : "Composing original instrumental music. This may take a few minutes.";
+  try {
+    const payload = isCover
+      ? { prompt, quality: document.querySelector("#coverQuality").value }
+      : { prompt, durationSeconds: Number(document.querySelector("#musicDuration").value) };
+    const suffix = isCover ? "generate-cover" : "generate-music";
+    const result = await api(`/api/admin/invitations/${encodeURIComponent(activeInvitation.id)}/${suffix}`, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    syncActiveInvitation(result.invitation);
+    message.textContent = `${isCover ? "Cover" : "Soundtrack"} generated and selected. ${result.remaining} generation${result.remaining === 1 ? "" : "s"} left.`;
+  } catch (error) {
+    message.textContent = error.message;
+  } finally {
+    button.textContent = isCover ? "Generate Cover" : "Generate Soundtrack";
+    renderGenerationStudio();
   }
 }
 
@@ -182,6 +282,23 @@ document.querySelectorAll("[data-save-status]").forEach((button) => {
     };
     saveInvitation(status, messages[status]);
   });
+});
+
+document.querySelector("#generateCover").addEventListener("click", () => generateAsset("cover"));
+document.querySelector("#generateMusic").addEventListener("click", () => generateAsset("music"));
+
+document.querySelector("#generatedCoverList").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-use-cover]");
+  if (!button) return;
+  document.querySelector("#editorCoverImage").value = button.dataset.useCover;
+  await saveInvitation(normalizedStatus(activeInvitation), "Cover selected.");
+});
+
+document.querySelector("#generatedTrackList").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-use-music]");
+  if (!button) return;
+  document.querySelector("#editorMusicUrl").value = button.dataset.useMusic;
+  await saveInvitation(normalizedStatus(activeInvitation), "Soundtrack selected.");
 });
 
 document.querySelector("#previewInvitation").addEventListener("click", async () => {

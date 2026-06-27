@@ -88,8 +88,53 @@
                   </select>
                 </label>
                 <label class="editor-wide">Invitation message <textarea id="editorMessage" rows="4"></textarea></label>
-                <label class="editor-wide">Cover image URL <input id="editorCoverImage" type="url" placeholder="https://..." /></label>
-                <label class="editor-wide">Music file URL <input id="editorMusicUrl" type="url" placeholder="https://.../song.mp3" /></label>
+                <input id="editorCoverImage" type="hidden" />
+                <input id="editorMusicUrl" type="hidden" />
+                <section class="generator-panel editor-wide" aria-labelledby="coverGeneratorHeading">
+                  <div class="generator-heading">
+                    <div>
+                      <p class="kicker">AI cover</p>
+                      <h3 id="coverGeneratorHeading">Generate invitation artwork</h3>
+                    </div>
+                    <span class="generator-state" id="coverGeneratorState">Checking provider</span>
+                  </div>
+                  <label>Art direction <textarea id="coverPrompt" rows="3" maxlength="1200"></textarea></label>
+                  <div class="generator-controls">
+                    <label>Quality
+                      <select id="coverQuality">
+                        <option value="low">Draft</option>
+                        <option value="medium" selected>Final</option>
+                        <option value="high">Premium</option>
+                      </select>
+                    </label>
+                    <button class="button primary" id="generateCover" type="button">Generate Cover</button>
+                  </div>
+                  <p class="admin-alert" id="coverGeneratorMessage" role="status"></p>
+                  <div class="generated-cover-list" id="generatedCoverList"></div>
+                </section>
+                <section class="generator-panel editor-wide" aria-labelledby="musicGeneratorHeading">
+                  <div class="generator-heading">
+                    <div>
+                      <p class="kicker">AI soundtrack</p>
+                      <h3 id="musicGeneratorHeading">Compose invitation music</h3>
+                    </div>
+                    <span class="generator-state" id="musicGeneratorState">Checking provider</span>
+                  </div>
+                  <label>Music direction <textarea id="musicPrompt" rows="3" maxlength="1200"></textarea></label>
+                  <div class="generator-controls">
+                    <label>Duration
+                      <select id="musicDuration">
+                        <option value="15">15 seconds</option>
+                        <option value="30" selected>30 seconds</option>
+                        <option value="45">45 seconds</option>
+                        <option value="60">60 seconds</option>
+                      </select>
+                    </label>
+                    <button class="button primary" id="generateMusic" type="button">Generate Soundtrack</button>
+                  </div>
+                  <p class="admin-alert" id="musicGeneratorMessage" role="status"></p>
+                  <div class="generated-track-list" id="generatedTrackList"></div>
+                </section>
                 <label class="check editor-wide"><input id="editorShowRsvp" type="checkbox" /> Collect guest RSVPs</label>
               </div>
               <p class="admin-alert" id="editorMessageStatus" role="status"></p>

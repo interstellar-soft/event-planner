@@ -5,8 +5,20 @@ const crypto = require("crypto");
 
 const root = __dirname;
 const dbPath = path.join(root, "data", "db.json");
+const generatedDir = path.join(root, "generated");
 const port = Number(process.env.PORT || 3000);
 const adminPassword = process.env.ADMIN_PASSWORD || "tony-admin";
+const openAiApiKey = process.env.OPENAI_API_KEY || "";
+const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY || "";
+const openAiApiBaseUrl = process.env.OPENAI_API_BASE_URL || "https://api.openai.com";
+const elevenLabsApiBaseUrl = process.env.ELEVENLABS_API_BASE_URL || "https://api.elevenlabs.io";
+const cloudinaryConfig = {
+  cloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+  apiKey: process.env.CLOUDINARY_API_KEY || "",
+  apiSecret: process.env.CLOUDINARY_API_SECRET || ""
+};
+const maxCoverGenerations = Number(process.env.MAX_COVER_GENERATIONS || 6);
+const maxMusicGenerations = Number(process.env.MAX_MUSIC_GENERATIONS || 3);
 const sessions = new Set();
 
 const mimeTypes = {
@@ -18,6 +30,7 @@ const mimeTypes = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".webp": "image/webp",
+  ".mp3": "audio/mpeg",
   ".txt": "text/plain; charset=utf-8",
   ".toml": "text/plain; charset=utf-8"
 };
@@ -139,13 +152,164 @@ function escapeHtml(value) {
 function safePublicUrl(value, { allowLocal = false } = {}) {
   const raw = String(value || "").trim();
   if (!raw) return "";
-  if (allowLocal && raw.startsWith("/assets/")) return raw;
+  if (allowLocal && (raw.startsWith("/assets/") || raw.startsWith("/generated/"))) return raw;
   try {
     const url = new URL(raw);
     return ["http:", "https:"].includes(url.protocol) ? url.href : "";
   } catch {
     return "";
   }
+}
+
+function generationConfig() {
+  return {
+    coverEnabled: Boolean(openAiApiKey),
+    musicEnabled: Boolean(elevenLabsApiKey),
+    permanentStorage: Boolean(cloudinaryConfig.cloudName && cloudinaryConfig.apiKey && cloudinaryConfig.apiSecret),
+    storage: cloudinaryConfig.cloudName && cloudinaryConfig.apiKey && cloudinaryConfig.apiSecret ? "cloudinary" : "local-temporary",
+    maxCoverGenerations,
+    maxMusicGenerations
+  };
+}
+
+function getGenerationUsage(invitation) {
+  invitation.generationUsage = invitation.generationUsage || { covers: 0, music: 0 };
+  invitation.generatedCovers = Array.isArray(invitation.generatedCovers) ? invitation.generatedCovers : [];
+  invitation.generatedTracks = Array.isArray(invitation.generatedTracks) ? invitation.generatedTracks : [];
+  return invitation.generationUsage;
+}
+
+function providerError(message, status = 502) {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+}
+
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error.name === "AbortError") throw providerError("Generation timed out. Please try again.", 504);
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function uploadToCloudinary(buffer, mimeType, invitation, kind) {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const folder = "tony-event-platform";
+  const publicId = `${safeSlug(invitation.slug)}-${kind}-${timestamp}`;
+  const signaturePayload = `folder=${folder}&public_id=${publicId}&timestamp=${timestamp}${cloudinaryConfig.apiSecret}`;
+  const signature = crypto.createHash("sha1").update(signaturePayload).digest("hex");
+  const form = new FormData();
+  form.append("file", new Blob([buffer], { type: mimeType }), publicId);
+  form.append("api_key", cloudinaryConfig.apiKey);
+  form.append("timestamp", String(timestamp));
+  form.append("folder", folder);
+  form.append("public_id", publicId);
+  form.append("signature", signature);
+  const resourceType = kind === "music" ? "video" : "image";
+  const response = await fetchWithTimeout(
+    `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudinaryConfig.cloudName)}/${resourceType}/upload`,
+    { method: "POST", body: form },
+    120_000
+  );
+  const result = await response.json();
+  if (!response.ok || !result.secure_url) {
+    throw providerError(result.error?.message || "Cloud storage upload failed.");
+  }
+  return result.secure_url;
+}
+
+async function persistGeneratedAsset(buffer, extension, mimeType, invitation, kind) {
+  if (generationConfig().permanentStorage) {
+    return uploadToCloudinary(buffer, mimeType, invitation, kind);
+  }
+  if (!fs.existsSync(generatedDir)) fs.mkdirSync(generatedDir, { recursive: true });
+  const filename = `${safeSlug(invitation.slug)}-${kind}-${Date.now()}-${crypto.randomBytes(3).toString("hex")}.${extension}`;
+  fs.writeFileSync(path.join(generatedDir, filename), buffer);
+  return `/generated/${filename}`;
+}
+
+function buildCoverPrompt(invitation, direction) {
+  const themeNames = { ivory: "ivory garden", midnight: "midnight charcoal and refined gold", sage: "sage green and soft botanical" };
+  return [
+    "Create a premium vertical background artwork for a digital event invitation.",
+    `Event: ${invitation.eventType || "celebration"}. Venue mood: ${invitation.venue || "elegant venue"}.`,
+    `Visual direction: ${direction}. Palette and style: ${themeNames[invitation.theme] || themeNames.ivory}.`,
+    "Portrait composition with generous calm negative space in the center for HTML invitation text.",
+    "No words, no letters, no numbers, no logos, no watermarks, no borders, and no identifiable people or faces.",
+    "Sophisticated editorial photography and fine-art styling, realistic texture, suitable for a luxury Lebanese event studio."
+  ].join(" ");
+}
+
+function buildMusicPrompt(invitation, direction) {
+  return [
+    `Create an original instrumental background track for a ${invitation.eventType || "celebration"} digital invitation.`,
+    `Creative direction: ${direction}.`,
+    "Elegant, warm, cinematic, emotionally uplifting, gentle opening and graceful resolved ending.",
+    "No vocals, no spoken words, no recognizable copyrighted melodies, and no imitation of any named artist.",
+    "Keep the arrangement refined and unobtrusive so invitation details remain the focus."
+  ].join(" ");
+}
+
+async function generateCover(invitation, direction, quality) {
+  const response = await fetchWithTimeout(`${openAiApiBaseUrl}/v1/images/generations`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${openAiApiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "gpt-image-2",
+      prompt: buildCoverPrompt(invitation, direction),
+      size: "1024x1536",
+      quality: ["low", "medium", "high"].includes(quality) ? quality : "medium",
+      output_format: "webp",
+      output_compression: 86,
+      n: 1
+    })
+  }, 150_000);
+  const result = await response.json();
+  if (!response.ok) {
+    throw providerError(result.error?.message || "Cover generation failed.", response.status >= 500 ? 502 : 400);
+  }
+  const encoded = result.data?.[0]?.b64_json;
+  if (!encoded) throw providerError("The image provider returned no image.");
+  return persistGeneratedAsset(Buffer.from(encoded, "base64"), "webp", "image/webp", invitation, "cover");
+}
+
+async function generateMusic(invitation, direction, durationSeconds) {
+  const response = await fetchWithTimeout(
+    `${elevenLabsApiBaseUrl}/v1/music?output_format=mp3_44100_128`,
+    {
+      method: "POST",
+      headers: {
+        "xi-api-key": elevenLabsApiKey,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        prompt: buildMusicPrompt(invitation, direction),
+        music_length_ms: durationSeconds * 1000,
+        model_id: process.env.ELEVENLABS_MUSIC_MODEL || "music_v1",
+        force_instrumental: true,
+        sign_with_c2pa: true
+      })
+    },
+    180_000
+  );
+  if (!response.ok) {
+    let message = "Soundtrack generation failed.";
+    try {
+      const result = await response.json();
+      message = result.detail?.message || result.detail?.status || result.message || message;
+    } catch {}
+    throw providerError(message, response.status >= 500 ? 502 : 400);
+  }
+  return persistGeneratedAsset(Buffer.from(await response.arrayBuffer()), "mp3", "audio/mpeg", invitation, "music");
 }
 
 function invitationStatus(value) {
@@ -177,7 +341,7 @@ function invitePage(invite, isPreview = false) {
   const title = escapeHtml(invite.title);
   const theme = ["ivory", "midnight", "sage"].includes(invite.theme) ? invite.theme : "ivory";
   const coverImageUrl = safePublicUrl(invite.coverImageUrl, { allowLocal: true });
-  const musicUrl = safePublicUrl(invite.musicUrl);
+  const musicUrl = safePublicUrl(invite.musicUrl, { allowLocal: true });
   const hostNames = escapeHtml(invite.hostNames || "Together with their families");
   const message = escapeHtml(invite.message || "We would be delighted to celebrate this special occasion with you.");
   const backgroundStyle = coverImageUrl ? ` style="--invite-cover: url('${escapeHtml(coverImageUrl)}')"` : "";
@@ -266,7 +430,7 @@ async function handleApi(req, res, pathname) {
         json(res, 401, { error: "Unauthorized" });
         return;
       }
-      json(res, 200, readDb());
+      json(res, 200, { ...readDb(), generationConfig: generationConfig() });
       return;
     }
 
@@ -285,6 +449,8 @@ async function handleApi(req, res, pathname) {
         language: String(body.language || "English").trim(),
         clientName: String(body.clientName || "").trim(),
         clientPhone: String(body.clientPhone || "").trim(),
+        coverDirection: String(body.coverDirection || "").trim(),
+        musicDirection: String(body.musicDirection || "").trim(),
         hostNames: "Together with their families",
         message: "We would be delighted to celebrate this special occasion with you.",
         theme: ["ivory", "midnight", "sage"].includes(body.theme) ? body.theme : "ivory",
@@ -292,12 +458,76 @@ async function handleApi(req, res, pathname) {
         musicUrl: "",
         rsvpDeadline: "",
         showRsvp: true,
+        generationUsage: { covers: 0, music: 0 },
+        generatedCovers: [],
+        generatedTracks: [],
         status: "draft",
         createdAt: new Date().toISOString()
       };
       db.invitations.unshift(invitation);
       writeDb(db);
       json(res, 201, { invitation, message: "Invitation request received." });
+      return;
+    }
+
+    const coverGenerationMatch = pathname.match(/^\/api\/admin\/invitations\/([^/]+)\/generate-cover$/);
+    if (req.method === "POST" && coverGenerationMatch) {
+      if (!isAuthed(req)) {
+        json(res, 401, { error: "Unauthorized" });
+        return;
+      }
+      if (!openAiApiKey) throw providerError("Cover generation is not configured. Add OPENAI_API_KEY in Render.", 503);
+      const body = await readBody(req);
+      const direction = String(body.prompt || "").trim();
+      if (direction.length < 10 || direction.length > 1200) {
+        throw providerError("Cover direction must be between 10 and 1200 characters.", 400);
+      }
+      const db = readDb();
+      const invitation = db.invitations.find((item) => item.id === decodeURIComponent(coverGenerationMatch[1]));
+      if (!invitation) throw providerError("Invitation not found.", 404);
+      const usage = getGenerationUsage(invitation);
+      if (usage.covers >= maxCoverGenerations) {
+        throw providerError(`This invitation has reached its limit of ${maxCoverGenerations} cover generations.`, 429);
+      }
+      const assetUrl = await generateCover(invitation, direction, body.quality);
+      const asset = { url: assetUrl, prompt: direction, createdAt: new Date().toISOString() };
+      invitation.generatedCovers.unshift(asset);
+      invitation.coverImageUrl = assetUrl;
+      usage.covers += 1;
+      invitation.updatedAt = asset.createdAt;
+      writeDb(db);
+      json(res, 201, { invitation, asset, remaining: Math.max(0, maxCoverGenerations - usage.covers) });
+      return;
+    }
+
+    const musicGenerationMatch = pathname.match(/^\/api\/admin\/invitations\/([^/]+)\/generate-music$/);
+    if (req.method === "POST" && musicGenerationMatch) {
+      if (!isAuthed(req)) {
+        json(res, 401, { error: "Unauthorized" });
+        return;
+      }
+      if (!elevenLabsApiKey) throw providerError("Music generation is not configured. Add ELEVENLABS_API_KEY in Render.", 503);
+      const body = await readBody(req);
+      const direction = String(body.prompt || "").trim();
+      const durationSeconds = Math.min(60, Math.max(15, Number(body.durationSeconds || 30)));
+      if (direction.length < 10 || direction.length > 1200) {
+        throw providerError("Music direction must be between 10 and 1200 characters.", 400);
+      }
+      const db = readDb();
+      const invitation = db.invitations.find((item) => item.id === decodeURIComponent(musicGenerationMatch[1]));
+      if (!invitation) throw providerError("Invitation not found.", 404);
+      const usage = getGenerationUsage(invitation);
+      if (usage.music >= maxMusicGenerations) {
+        throw providerError(`This invitation has reached its limit of ${maxMusicGenerations} soundtrack generations.`, 429);
+      }
+      const assetUrl = await generateMusic(invitation, direction, durationSeconds);
+      const asset = { url: assetUrl, prompt: direction, durationSeconds, createdAt: new Date().toISOString() };
+      invitation.generatedTracks.unshift(asset);
+      invitation.musicUrl = assetUrl;
+      usage.music += 1;
+      invitation.updatedAt = asset.createdAt;
+      writeDb(db);
+      json(res, 201, { invitation, asset, remaining: Math.max(0, maxMusicGenerations - usage.music) });
       return;
     }
 
@@ -316,7 +546,8 @@ async function handleApi(req, res, pathname) {
       }
       const fields = [
         "title", "eventType", "date", "venue", "mapUrl", "packageName", "language",
-        "clientName", "clientPhone", "hostNames", "message", "coverImageUrl", "musicUrl", "rsvpDeadline"
+        "clientName", "clientPhone", "hostNames", "message", "coverImageUrl", "musicUrl", "rsvpDeadline",
+        "coverDirection", "musicDirection"
       ];
       fields.forEach((field) => {
         if (Object.prototype.hasOwnProperty.call(body, field)) invitation[field] = String(body[field] || "").trim();
@@ -381,7 +612,7 @@ async function handleApi(req, res, pathname) {
 
     json(res, 404, { error: "API route not found" });
   } catch (error) {
-    json(res, 400, { error: error.message });
+    json(res, error.status || 400, { error: error.message });
   }
 }
 
@@ -416,6 +647,10 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === "GET") {
+    if (pathname.startsWith("/data/") || pathname.startsWith("/.")) {
+      send(res, 404, "Not found", { "Content-Type": "text/plain; charset=utf-8" });
+      return;
+    }
     serveFile(req, res);
     return;
   }

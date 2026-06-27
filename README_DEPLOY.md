@@ -49,7 +49,20 @@ Render/Railway settings:
 - Start command: `npm start`
 - Environment variables:
   - `ADMIN_PASSWORD=<strong password>`
+  - `OPENAI_API_KEY=<OpenAI API key>` enables AI invitation covers
+  - `ELEVENLABS_API_KEY=<ElevenLabs API key>` enables instrumental soundtracks
+  - `CLOUDINARY_CLOUD_NAME=<Cloudinary cloud name>`
+  - `CLOUDINARY_API_KEY=<Cloudinary API key>`
+  - `CLOUDINARY_API_SECRET=<Cloudinary API secret>`
   - `PORT` is usually provided by the host
+
+The AI controls remain disabled until their provider keys are configured. Cloudinary is strongly recommended in production so generated covers and soundtracks survive host restarts and redeployments. Without Cloudinary, generated files are stored temporarily in `generated/`.
+
+Optional generation controls:
+
+- `MAX_COVER_GENERATIONS=6`
+- `MAX_MUSIC_GENERATIONS=3`
+- `ELEVENLABS_MUSIC_MODEL=music_v1`
 
 ## Current limitations
 
