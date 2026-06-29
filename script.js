@@ -1,31 +1,5 @@
-const defaultTemplates = [
-  {
-    name: "Ivory Garden",
-    price: "$49",
-    initials: "M & K",
-    description: "Soft florals, ivory paper, and classic wedding details.",
-    background: "linear-gradient(145deg, #d9e8df, #f8efe8)",
-    card: "linear-gradient(160deg, #ffffff, #f4dfd7)"
-  },
-  {
-    name: "Midnight Oud",
-    price: "$89",
-    initials: "L & R",
-    description: "Charcoal, gold accents, and a formal evening mood.",
-    background: "linear-gradient(145deg, #11171b, #6c5b42)",
-    card: "linear-gradient(160deg, #202a30, #b58b45)"
-  },
-  {
-    name: "Sage Majlis",
-    price: "$129",
-    initials: "A & N",
-    description: "Bilingual-ready layout for modern regional celebrations.",
-    background: "linear-gradient(145deg, #2f7b68, #eee9f4)",
-    card: "linear-gradient(160deg, #f9faf4, #cfe0d7)"
-  }
-];
-
 const content = window.siteContent || {};
+const invitationTemplates = window.invitationTemplates || [];
 
 const templateGrid = document.querySelector("#templateGrid");
 const portfolioGrid = document.querySelector("#portfolioGrid");
@@ -34,7 +8,7 @@ const bundleGrid = document.querySelector("#bundleGrid");
 const invitationPricingGrid = document.querySelector("#invitationPricingGrid");
 const orderForm = document.querySelector("#orderForm");
 const mediaBookingForm = document.querySelector("#mediaBookingForm");
-let selectedInvitationTheme = "ivory";
+let selectedInvitationTemplate = "ivory-garden";
 
 function getPathValue(source, path) {
   return path.split(".").reduce((value, key) => value?.[key], source);
@@ -51,18 +25,19 @@ function applyContentText() {
 }
 
 function renderTemplates() {
-  templateGrid.innerHTML = defaultTemplates
+  templateGrid.innerHTML = invitationTemplates
     .map(
-      (template, index) => `
+      (template) => `
         <article class="template-card">
-          <div class="template-art" style="background:${template.background}">
-            <div style="background:${template.card}">${template.initials}</div>
+          <div class="template-art invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)}" style="--template-accent:${escapeHtml(template.accent)};--template-canvas:${escapeHtml(template.canvas)};--template-paper:${escapeHtml(template.paper)}">
+            <div><span>Invitation</span><strong>M &amp; K</strong><small>18 · 07 · 2026</small></div>
           </div>
           <footer>
+            <span class="template-tier">${escapeHtml(template.category)} · ${escapeHtml(template.tier)}</span>
             <h3>${template.name}</h3>
             <p>${template.description}</p>
-            <p><strong>${template.price}</strong></p>
-            <button class="button" type="button" data-template="${template.name}" data-theme="${["ivory", "midnight", "sage"][index]}">Use this style</button>
+            <p><strong>$${template.price}</strong></p>
+            <button class="button" type="button" data-template="${escapeHtml(template.id)}">Choose template</button>
           </footer>
         </article>
       `
@@ -123,7 +98,7 @@ function renderPriceCards(target, packages, actionType) {
             ${item.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join("")}
           </ul>
           <a class="button card-button ${item.featured ? "dark" : ""}" href="${actionType === "media" ? "#booking" : "#order"}" ${
-            actionType === "media" ? `data-media-plan="${escapeHtml(item.name)}"` : `data-plan="${escapeHtml(item.name)}"`
+            actionType === "media" ? `data-media-plan="${escapeHtml(item.name)}"` : `data-plan="${escapeHtml(item.templateId || "ivory-garden")}"`
           }>${actionType === "media" ? "Request Quote" : "Choose Package"}</a>
         </article>
       `
@@ -132,8 +107,8 @@ function renderPriceCards(target, packages, actionType) {
 }
 
 function renderPackageSelects() {
-  document.querySelector("#packageName").innerHTML = content.invitationPackages
-    .map((item) => `<option>${escapeHtml(item.name)}</option>`)
+  document.querySelector("#packageName").innerHTML = invitationTemplates
+    .map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)} · $${item.price}</option>`)
     .join("");
   document.querySelector("#mediaPackage").innerHTML = [
     ...content.mediaBundles.map((item) => item.name),
@@ -172,6 +147,15 @@ function updatePreview() {
   document.querySelector("#previewTitle").textContent = title;
   document.querySelector("#previewDate").textContent = date;
   document.querySelector("#previewVenue").textContent = venue;
+  const selectedId = document.querySelector("#packageName")?.value || selectedInvitationTemplate;
+  const template = invitationTemplates.find((item) => item.id === selectedId) || invitationTemplates[0];
+  const previewCard = document.querySelector("#storefrontInviteCard");
+  if (template && previewCard) {
+    previewCard.className = `invite-card template-preview-card invite-template-${template.id} invite-layout-${template.layout}`;
+    previewCard.style.setProperty("--template-accent", template.accent);
+    previewCard.style.setProperty("--template-canvas", template.canvas);
+    previewCard.style.setProperty("--template-paper", template.paper);
+  }
   updateQr(`https://yourdomain.com/invite/${slugify(title)}`);
 }
 
@@ -246,7 +230,7 @@ Type: ${document.querySelector("#inviteEventType").value}
 Date: ${document.querySelector("#eventDate").value}
 Venue: ${document.querySelector("#venue").value}
 Location: ${document.querySelector("#mapUrl").value || "Not provided"}
-Package: ${document.querySelector("#packageName").value}
+Template: ${document.querySelector("#packageName").selectedOptions[0]?.textContent || document.querySelector("#packageName").value}
 Add-ons: ${addOns}
 
 Please send me the next steps.`;
@@ -272,6 +256,12 @@ document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-plan]");
   if (!button) return;
   document.querySelector("#packageName").value = button.dataset.plan;
+  selectedInvitationTemplate = button.dataset.plan;
+});
+
+document.querySelector("#packageName").addEventListener("change", (event) => {
+  selectedInvitationTemplate = event.target.value;
+  updatePreview();
 });
 
 document.addEventListener("click", (event) => {
@@ -283,8 +273,8 @@ document.addEventListener("click", (event) => {
 templateGrid.addEventListener("click", (event) => {
   const button = event.target.closest("[data-template]");
   if (!button) return;
-  selectedInvitationTheme = button.dataset.theme || "ivory";
-  document.querySelector("#eventTitle").value = `${button.dataset.template} Celebration`;
+  selectedInvitationTemplate = button.dataset.template || "ivory-garden";
+  document.querySelector("#packageName").value = selectedInvitationTemplate;
   updatePreview();
   document.querySelector("#order").scrollIntoView({ behavior: "smooth" });
 });
@@ -301,13 +291,11 @@ orderForm.addEventListener("submit", async (event) => {
       date: document.querySelector("#eventDate").value,
       venue: document.querySelector("#venue").value,
       mapUrl: document.querySelector("#mapUrl").value,
-      packageName: document.querySelector("#packageName").value,
+      templateId: document.querySelector("#packageName").value,
       language: getCheckedValues(orderForm).includes("Bilingual Arabic / English") ? "Bilingual" : "English",
       clientName: document.querySelector("#inviteClientName").value,
       clientPhone: document.querySelector("#inviteClientPhone").value,
-      coverDirection: document.querySelector("#inviteVisualMood").value,
-      musicDirection: document.querySelector("#inviteMusicMood").value,
-      theme: selectedInvitationTheme
+      packageName: "Digital invitation template"
     });
     document.querySelector("#generatedInviteCard").hidden = false;
     document.querySelector("#clientStudioLink").href = result.clientUrl;
@@ -346,7 +334,7 @@ document.querySelector("#invitationWhatsApp").addEventListener("click", () => {
   openWhatsapp(invitationQuoteMessage(), document.querySelector("#invitationStatus"), {
     type: "Invitation WhatsApp",
     title,
-    summary: `${document.querySelector("#packageName").value} quote request`
+    summary: `${document.querySelector("#packageName").selectedOptions[0]?.textContent || "Invitation template"} quote request`
   });
 });
 

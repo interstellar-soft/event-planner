@@ -33,6 +33,19 @@
 
         <div class="client-studio-layout">
           <section class="client-workspace">
+            <section class="client-template-section" aria-labelledby="clientTemplateHeading">
+              <div class="client-section-heading">
+                <div>
+                  <p class="kicker">Invitation templates</p>
+                  <h2 id="clientTemplateHeading">Choose the complete design</h2>
+                </div>
+                <span class="selected-template-summary" id="selectedTemplateSummary"></span>
+              </div>
+              <div class="template-filter" id="clientTemplateFilter" aria-label="Filter invitation templates"></div>
+              <div class="client-template-grid" id="clientTemplateGrid"></div>
+              <p class="admin-alert" id="clientTemplateMessage" role="status"></p>
+            </section>
+
             <form class="client-editor-form" id="clientEditorForm">
               <div class="client-section-heading">
                 <h2>Invitation details</h2>
@@ -46,65 +59,12 @@
                 <label>Google Maps link <input id="clientMapUrl" type="url" /></label>
                 <label>RSVP deadline <input id="clientRsvpDeadline" /></label>
                 <label>Host line <input id="clientHostNames" /></label>
-                <label>Design theme
-                  <select id="clientTheme">
-                    <option value="ivory">Ivory Garden</option>
-                    <option value="midnight">Midnight Oud</option>
-                    <option value="sage">Sage Majlis</option>
-                  </select>
-                </label>
                 <label class="editor-wide">Invitation message <textarea id="clientMessage" rows="4"></textarea></label>
+                <label class="editor-wide" id="customBriefField" hidden>Custom design brief <textarea id="clientCustomBrief" rows="5" maxlength="1200" placeholder="Describe the colors, visual references, atmosphere, and music direction you want Tony's studio to create."></textarea></label>
                 <label class="check editor-wide"><input id="clientShowRsvp" type="checkbox" /> Collect guest RSVPs</label>
               </div>
               <p class="admin-alert" id="clientEditorMessage" role="status"></p>
             </form>
-
-            <section class="client-generator-section" aria-labelledby="clientCoverHeading">
-              <div class="client-section-heading">
-                <div>
-                  <p class="kicker">Cover artwork</p>
-                  <h2 id="clientCoverHeading">Generate your invitation cover</h2>
-                </div>
-                <span class="generator-state" id="clientCoverState"></span>
-              </div>
-              <label>Art direction <textarea id="clientCoverPrompt" rows="3" maxlength="1200"></textarea></label>
-              <div class="generator-controls">
-                <label>Quality
-                  <select id="clientCoverQuality">
-                    <option value="low">Draft</option>
-                    <option value="medium" selected>Final</option>
-                    <option value="high">Premium</option>
-                  </select>
-                </label>
-                <button class="button primary" id="clientGenerateCover" type="button">Generate Preview</button>
-              </div>
-              <p class="admin-alert" id="clientCoverMessage" role="status"></p>
-              <div class="generated-cover-list" id="clientCoverList"></div>
-            </section>
-
-            <section class="client-generator-section" aria-labelledby="clientMusicHeading">
-              <div class="client-section-heading">
-                <div>
-                  <p class="kicker">Soundtrack</p>
-                  <h2 id="clientMusicHeading">Compose original music</h2>
-                </div>
-                <span class="generator-state" id="clientMusicState"></span>
-              </div>
-              <label>Music direction <textarea id="clientMusicPrompt" rows="3" maxlength="1200"></textarea></label>
-              <div class="generator-controls">
-                <label>Duration
-                  <select id="clientMusicDuration">
-                    <option value="15">15 seconds</option>
-                    <option value="30" selected>30 seconds</option>
-                    <option value="45">45 seconds</option>
-                    <option value="60">60 seconds</option>
-                  </select>
-                </label>
-                <button class="button primary" id="clientGenerateMusic" type="button">Generate Soundtrack</button>
-              </div>
-              <p class="admin-alert" id="clientMusicMessage" role="status"></p>
-              <div class="generated-track-list" id="clientTrackList"></div>
-            </section>
           </section>
 
           <aside class="client-purchase-panel">
@@ -124,8 +84,8 @@
               <p class="kicker">Purchase</p>
               <h2>Unlock the complete invitation</h2>
               <div class="client-unlock-list">
-                <span>Full-quality cover generation</span>
-                <span>Original instrumental soundtrack</span>
+                <span>Your selected complete design</span>
+                <span>Personalized event details and guest experience</span>
                 <span>Publishing, QR sharing, and RSVP</span>
               </div>
               <div class="payment-methods" id="paymentMethods"></div>

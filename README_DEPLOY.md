@@ -58,9 +58,11 @@ Render/Railway settings:
   - `BANK_PAYMENT_DETAILS=<bank name, account/IBAN, and recipient>`
   - `PORT` is usually provided by the host
 
-The AI controls remain disabled until their provider keys are configured. Cloudinary is strongly recommended in production so generated covers and soundtracks survive host restarts and redeployments. Without Cloudinary, generated files are stored temporarily in `generated/`.
+Clients choose from 18 ready-to-use invitation templates priced from $49 to $89, or the $149 Custom Atelier service. Template selection controls the complete invitation layout and price. AI cover and soundtrack controls are admin-only and appear for Custom Atelier invitations.
 
-Client purchases currently use manual verification. A client submits a Whish or bank transfer reference from the private studio, then Tony approves or rejects it from `/admin`. Approval unlocks full cover quality, music generation, RSVP controls, and publishing.
+The admin AI controls remain disabled until their provider keys are configured. Cloudinary is strongly recommended in production so custom generated covers and soundtracks survive host restarts and redeployments. Without Cloudinary, generated files are stored temporarily in `generated/`.
+
+Client purchases currently use manual verification. A client selects a template, previews it with a watermark, and submits a Whish or bank transfer reference from the private studio. Tony previews the result and approves or rejects it from `/admin`. Approval unlocks RSVP controls and publishing. Template selection locks while payment is under review.
 
 Optional generation controls:
 

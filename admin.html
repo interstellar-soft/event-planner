@@ -92,20 +92,16 @@
                 <label>RSVP deadline <input id="editorRsvpDeadline" placeholder="1 July 2026" /></label>
                 <label>Host line <input id="editorHostNames" placeholder="Together with their families" /></label>
                 <label>
-                  Design theme
-                  <select id="editorTheme">
-                    <option value="ivory">Ivory Garden</option>
-                    <option value="midnight">Midnight Oud</option>
-                    <option value="sage">Sage Majlis</option>
-                  </select>
+                  Invitation template
+                  <select id="editorTemplate"></select>
                 </label>
                 <label class="editor-wide">Invitation message <textarea id="editorMessage" rows="4"></textarea></label>
                 <input id="editorCoverImage" type="hidden" />
                 <input id="editorMusicUrl" type="hidden" />
-                <section class="generator-panel editor-wide" aria-labelledby="coverGeneratorHeading">
+                <section class="generator-panel editor-wide" id="customCoverPanel" aria-labelledby="coverGeneratorHeading" hidden>
                   <div class="generator-heading">
                     <div>
-                      <p class="kicker">AI cover</p>
+                      <p class="kicker">Custom service · Admin only</p>
                       <h3 id="coverGeneratorHeading">Generate invitation artwork</h3>
                     </div>
                     <span class="generator-state" id="coverGeneratorState">Checking provider</span>
@@ -124,10 +120,10 @@
                   <p class="admin-alert" id="coverGeneratorMessage" role="status"></p>
                   <div class="generated-cover-list" id="generatedCoverList"></div>
                 </section>
-                <section class="generator-panel editor-wide" aria-labelledby="musicGeneratorHeading">
+                <section class="generator-panel editor-wide" id="customMusicPanel" aria-labelledby="musicGeneratorHeading" hidden>
                   <div class="generator-heading">
                     <div>
-                      <p class="kicker">AI soundtrack</p>
+                      <p class="kicker">Custom service · Admin only</p>
                       <h3 id="musicGeneratorHeading">Compose invitation music</h3>
                     </div>
                     <span class="generator-state" id="musicGeneratorState">Checking provider</span>

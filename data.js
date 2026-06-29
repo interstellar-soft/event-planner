@@ -18,24 +18,34 @@ window.siteContent = {
   },
   invitationPackages: [
     {
-      name: "Digital Invite",
+      name: "Essential Templates",
       price: "$49",
-      description: "Single event invitation with RSVP, QR sharing, and WhatsApp-ready link.",
-      features: ["Template customization", "Shareable event link", "Guest RSVP capture"]
+      templateId: "ivory-garden",
+      description: "Six polished layouts for simple, elegant celebrations.",
+      features: ["Complete responsive design", "Shareable event link", "Guest RSVP capture"]
     },
     {
-      name: "Wedding Invite Plus",
-      price: "$129",
-      description: "Premium wedding page with guest management and bilingual support.",
-      features: ["Arabic / English wording", "Guest RSVP overview", "WhatsApp guest links"],
+      name: "Signature Templates",
+      price: "$69",
+      templateId: "midnight-oud",
+      description: "Seven expressive layouts with richer compositions and styling.",
+      features: ["Distinct layout system", "Guest RSVP overview", "WhatsApp guest links"],
       featured: true,
-      badge: "Best add-on"
+      badge: "Most popular"
     },
     {
-      name: "Planner / Studio Portal",
-      price: "$39/mo",
-      description: "Recurring plan for planners, venues, and event studios.",
-      features: ["Multiple active events", "Reusable client portal", "Priority custom designs"]
+      name: "Premium Templates",
+      price: "$89",
+      templateId: "sage-majlis",
+      description: "Five statement designs for weddings, baptisms, and launches.",
+      features: ["Premium composition", "Bilingual-ready layouts", "Guest RSVP and QR sharing"]
+    },
+    {
+      name: "Custom Atelier",
+      price: "$149",
+      templateId: "custom-atelier",
+      description: "A bespoke invitation art-directed and produced by Tony's studio.",
+      features: ["Custom cover artwork", "Original soundtrack option", "Admin-managed revisions"]
     }
   ],
   photographyPackages: [

@@ -3,7 +3,7 @@ const dashboard = document.querySelector("#adminDashboard");
 const loginMessage = document.querySelector("#loginMessage");
 const editor = document.querySelector("#invitationEditor");
 const editorStatus = document.querySelector("#editorMessageStatus");
-let adminData = { invitations: [], bookings: [], rsvps: [], generationConfig: {} };
+let adminData = { invitations: [], bookings: [], rsvps: [], generationConfig: {}, templates: [] };
 let activeInvitation = null;
 
 function escapeHtml(value) {
@@ -102,7 +102,10 @@ function openEditor(invitation) {
   document.querySelector("#editorMapUrl").value = invitation.mapUrl || "";
   document.querySelector("#editorRsvpDeadline").value = invitation.rsvpDeadline || "";
   document.querySelector("#editorHostNames").value = invitation.hostNames || "";
-  document.querySelector("#editorTheme").value = invitation.theme || "ivory";
+  const templateSelect = document.querySelector("#editorTemplate");
+  templateSelect.innerHTML = adminData.templates.map((template) => `<option value="${escapeHtml(template.id)}">${escapeHtml(template.name)} · $${template.price}</option>`).join("");
+  templateSelect.value = invitation.templateId || "ivory-garden";
+  renderCustomGenerationPanels();
   document.querySelector("#editorMessage").value = invitation.message || "";
   document.querySelector("#editorCoverImage").value = invitation.coverImageUrl || "";
   document.querySelector("#editorMusicUrl").value = invitation.musicUrl || "";
@@ -116,6 +119,13 @@ function openEditor(invitation) {
   editor.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function renderCustomGenerationPanels() {
+  const selected = adminData.templates.find((template) => template.id === document.querySelector("#editorTemplate").value);
+  const custom = Boolean(selected?.custom);
+  document.querySelector("#customCoverPanel").hidden = !custom;
+  document.querySelector("#customMusicPanel").hidden = !custom;
+}
+
 function renderAdminPayment(invitation) {
   const payment = invitation.payment || { status: "unpaid" };
   document.querySelector("#adminPaymentStatus").textContent = payment.status === "paid" ? "Paid" : payment.status === "submitted" ? "Verification requested" : payment.status === "rejected" ? "Rejected" : "Unpaid";
@@ -126,6 +136,7 @@ function renderAdminPayment(invitation) {
 }
 
 function defaultCoverPrompt(invitation) {
+  if (invitation.customBrief) return invitation.customBrief;
   if (invitation.coverDirection) return invitation.coverDirection;
   const directions = {
     "Wedding Celebration": "Romantic evening garden, soft florals, candlelight, refined ivory and gold details",
@@ -231,7 +242,7 @@ function editorPayload(status) {
     mapUrl: document.querySelector("#editorMapUrl").value,
     rsvpDeadline: document.querySelector("#editorRsvpDeadline").value,
     hostNames: document.querySelector("#editorHostNames").value,
-    theme: document.querySelector("#editorTheme").value,
+    templateId: document.querySelector("#editorTemplate").value,
     message: document.querySelector("#editorMessage").value,
     coverImageUrl: document.querySelector("#editorCoverImage").value,
     musicUrl: document.querySelector("#editorMusicUrl").value,
@@ -329,6 +340,7 @@ document.querySelectorAll("[data-save-status]").forEach((button) => {
 
 document.querySelector("#generateCover").addEventListener("click", () => generateAsset("cover"));
 document.querySelector("#generateMusic").addEventListener("click", () => generateAsset("music"));
+document.querySelector("#editorTemplate").addEventListener("change", renderCustomGenerationPanels);
 document.querySelector("#approvePayment").addEventListener("click", () => reviewPayment("paid"));
 document.querySelector("#rejectPayment").addEventListener("click", () => reviewPayment("rejected"));
 document.querySelector("#previewBeforeApproval").addEventListener("click", openPrivatePreview);

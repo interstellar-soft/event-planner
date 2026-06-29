@@ -2,6 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const invitationTemplates = require("./templates");
 
 const root = __dirname;
 const dbPath = path.join(root, "data", "db.json");
@@ -24,6 +25,7 @@ const invitationPackages = {
   "Wedding Invite Plus": { name: "Wedding Invite Plus", price: 129, currency: "USD" },
   "Planner / Studio Portal": { name: "Planner / Studio Portal", price: 39, currency: "USD" }
 };
+const templateById = new Map(invitationTemplates.map((template) => [template.id, template]));
 const sessions = new Set();
 
 const mimeTypes = {
@@ -67,6 +69,15 @@ function readDb() {
       invitation.packageName = selectedPackage.name;
       invitation.packagePrice = selectedPackage.price;
       invitation.packageCurrency = selectedPackage.currency;
+      migrated = true;
+    }
+    if (!templateById.has(invitation.templateId)) {
+      const legacyTemplate = invitation.theme === "midnight" ? "midnight-oud" : invitation.theme === "sage" ? "sage-majlis" : "ivory-garden";
+      const agreedLegacyPrice = invitation.packagePrice;
+      applyTemplate(invitation, legacyTemplate);
+      if (["submitted", "paid"].includes(invitation.payment?.status) && Number.isFinite(agreedLegacyPrice)) {
+        invitation.packagePrice = agreedLegacyPrice;
+      }
       migrated = true;
     }
     if (!invitation.generationUsage || !Array.isArray(invitation.generatedCovers) || !Array.isArray(invitation.generatedTracks)) {
@@ -218,6 +229,30 @@ function packageFor(name) {
   return invitationPackages[name] || invitationPackages["Digital Invite"];
 }
 
+function templateFor(id) {
+  return templateById.get(String(id || "")) || templateById.get("ivory-garden");
+}
+
+function applyTemplate(invitation, templateId) {
+  const template = templateFor(templateId);
+  invitation.templateId = template.id;
+  invitation.templateName = template.name;
+  invitation.packageName = template.name;
+  invitation.packagePrice = template.price;
+  invitation.packageCurrency = "USD";
+  return template;
+}
+
+function publicTemplates() {
+  return invitationTemplates.map(({ accent, canvas, paper, ...template }) => ({
+    ...template,
+    accent,
+    canvas,
+    paper,
+    currency: "USD"
+  }));
+}
+
 function isPaid(invitation) {
   return invitation.payment?.status === "paid";
 }
@@ -240,6 +275,7 @@ function clientInvitation(invitation) {
       ? invitation.generatedCovers
       : (invitation.generatedCovers || []).map((asset) => ({ ...asset, url: protectedCoverUrl })),
     paid,
+    template: templateFor(invitation.templateId),
     previewUrl: `/invite/${invitation.slug}?client=${encodeURIComponent(clientToken)}`,
     publicUrl: invitation.status === "published" ? `/invite/${invitation.slug}` : null
   };
@@ -344,11 +380,11 @@ async function persistGeneratedAsset(buffer, extension, mimeType, invitation, ki
 }
 
 function buildCoverPrompt(invitation, direction) {
-  const themeNames = { ivory: "ivory garden", midnight: "midnight charcoal and refined gold", sage: "sage green and soft botanical" };
+  const template = templateFor(invitation.templateId);
   return [
     "Create a premium vertical background artwork for a digital event invitation.",
     `Event: ${invitation.eventType || "celebration"}. Venue mood: ${invitation.venue || "elegant venue"}.`,
-    `Visual direction: ${direction}. Palette and style: ${themeNames[invitation.theme] || themeNames.ivory}.`,
+    `Visual direction: ${direction}. Selected invitation template: ${template.name}. Palette: ${template.canvas}, ${template.paper}, and ${template.accent}.`,
     "Portrait composition with generous calm negative space in the center for HTML invitation text.",
     "No words, no letters, no numbers, no logos, no watermarks, no borders, and no identifiable people or faces.",
     "Sophisticated editorial photography and fine-art styling, realistic texture, suitable for a luxury Lebanese event studio."
@@ -450,13 +486,18 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
   const title = escapeHtml(invite.title);
   const isPreview = adminPreview || clientPreview;
   const locked = clientPreview && !isPaid(invite);
-  const theme = ["ivory", "midnight", "sage"].includes(invite.theme) ? invite.theme : "ivory";
+  const template = templateFor(invite.templateId);
   const rawCoverImageUrl = locked && invite.clientToken ? `/preview-cover/${encodeURIComponent(invite.clientToken)}` : invite.coverImageUrl;
   const coverImageUrl = safePublicUrl(rawCoverImageUrl, { allowLocal: true });
   const musicUrl = safePublicUrl(invite.musicUrl, { allowLocal: true });
   const hostNames = escapeHtml(invite.hostNames || "Together with their families");
   const message = escapeHtml(invite.message || "We would be delighted to celebrate this special occasion with you.");
-  const backgroundStyle = coverImageUrl ? ` style="--invite-cover: url('${escapeHtml(coverImageUrl)}')"` : "";
+  const templateStyle = [
+    `--template-accent:${template.accent}`,
+    `--template-canvas:${template.canvas}`,
+    `--template-paper:${template.paper}`,
+    coverImageUrl ? `--invite-cover:url('${escapeHtml(coverImageUrl)}')` : ""
+  ].filter(Boolean).join(";");
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -466,23 +507,27 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
     <title>${title} | Digital Invitation</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body class="invite-public-body invite-theme-${theme}"${backgroundStyle}>
+  <body class="invite-public-body invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)}" style="${templateStyle}">
     <main class="invite-public-page">
       <section class="invite-public-card">
         ${isPreview ? `<div class="invite-preview-banner">${adminPreview ? "Private admin preview" : locked ? "Watermarked client preview" : "Client preview"}</div>` : ""}
         ${locked ? `<div class="invite-watermark" aria-hidden="true">PREVIEW</div>` : ""}
-        <p class="invite-kicker">${escapeHtml(invite.eventType || "Event Invitation")}</p>
-        <p class="invite-hosts">${hostNames}</p>
-        <h1>${title}</h1>
-        <p class="invite-message">${message}</p>
-        <div class="invite-details">
-        <p>${escapeHtml(invite.date)}</p>
-        <p>${escapeHtml(invite.venue)}</p>
+        <div class="invite-decoration" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div class="invite-content">
+          <p class="invite-template-label">${escapeHtml(template.name)}</p>
+          <p class="invite-kicker">${escapeHtml(invite.eventType || "Event Invitation")}</p>
+          <p class="invite-hosts">${hostNames}</p>
+          <h1>${title}</h1>
+          <p class="invite-message">${message}</p>
+          <div class="invite-details">
+            <p class="invite-date">${escapeHtml(invite.date)}</p>
+            <p class="invite-venue">${escapeHtml(invite.venue)}</p>
+          </div>
+          ${invite.mapUrl ? `<a class="button outline invite-location" href="${escapeHtml(invite.mapUrl)}" target="_blank" rel="noopener noreferrer">Open Location</a>` : ""}
+          ${musicUrl && !locked ? `<audio class="invite-audio" controls preload="none" src="${escapeHtml(musicUrl)}">Your browser does not support audio playback.</audio>` : ""}
+          ${invite.rsvpDeadline ? `<p class="invite-deadline">Kindly respond by ${escapeHtml(invite.rsvpDeadline)}</p>` : ""}
+          ${locked ? `<a class="button primary full invite-unlock" href="/studio/${escapeHtml(invite.clientToken)}">Choose this template</a>` : ""}
         </div>
-        ${invite.mapUrl ? `<a class="button outline" href="${escapeHtml(invite.mapUrl)}" target="_blank" rel="noopener noreferrer">Open Location</a>` : ""}
-        ${musicUrl && !locked ? `<audio class="invite-audio" controls preload="none" src="${escapeHtml(musicUrl)}">Your browser does not support audio playback.</audio>` : ""}
-        ${invite.rsvpDeadline ? `<p class="invite-deadline">Kindly respond by ${escapeHtml(invite.rsvpDeadline)}</p>` : ""}
-        ${locked ? `<a class="button primary full invite-unlock" href="/studio/${escapeHtml(invite.clientToken)}">Purchase to unlock and publish</a>` : ""}
         ${invite.showRsvp === false || locked ? "" : `
         <form class="rsvp-form public-rsvp-form" id="publicRsvpForm">
           <input type="hidden" id="inviteId" value="${escapeHtml(invite.id)}" />
@@ -552,14 +597,19 @@ async function handleApi(req, res, pathname) {
         json(res, 401, { error: "Unauthorized" });
         return;
       }
-      json(res, 200, { ...readDb(), generationConfig: generationConfig() });
+      json(res, 200, { ...readDb(), generationConfig: generationConfig(), templates: publicTemplates() });
+      return;
+    }
+
+    if (req.method === "POST" && /^\/api\/client\/invitations\/[^/]+\/generate-(cover|music)$/.test(pathname)) {
+      json(res, 403, { error: "Custom artwork and soundtrack generation are managed by Tony's studio." });
       return;
     }
 
     if (req.method === "POST" && pathname === "/api/invitations") {
       const body = await readBody(req);
       const db = readDb();
-      const selectedPackage = packageFor(String(body.packageName || ""));
+      const selectedTemplate = templateFor(body.templateId);
       const invitation = {
         id: createId("invite"),
         clientToken: crypto.randomBytes(24).toString("hex"),
@@ -569,17 +619,19 @@ async function handleApi(req, res, pathname) {
         date: String(body.date || "").trim(),
         venue: String(body.venue || "").trim(),
         mapUrl: String(body.mapUrl || "").trim(),
-        packageName: selectedPackage.name,
-        packagePrice: selectedPackage.price,
-        packageCurrency: selectedPackage.currency,
+        templateId: selectedTemplate.id,
+        templateName: selectedTemplate.name,
+        packageName: selectedTemplate.name,
+        packagePrice: selectedTemplate.price,
+        packageCurrency: "USD",
         language: String(body.language || "English").trim(),
         clientName: String(body.clientName || "").trim(),
         clientPhone: String(body.clientPhone || "").trim(),
-        coverDirection: String(body.coverDirection || "").trim(),
-        musicDirection: String(body.musicDirection || "").trim(),
+        coverDirection: "",
+        musicDirection: "",
+        customBrief: String(body.customBrief || "").trim(),
         hostNames: "Together with their families",
         message: "We would be delighted to celebrate this special occasion with you.",
-        theme: ["ivory", "midnight", "sage"].includes(body.theme) ? body.theme : "ivory",
         coverImageUrl: "",
         musicUrl: "",
         rsvpDeadline: "",
@@ -615,7 +667,7 @@ async function handleApi(req, res, pathname) {
       getGenerationUsage(invitation);
       json(res, 200, {
         invitation: clientInvitation(invitation),
-        generationConfig: generationConfig(),
+        templates: publicTemplates(),
         paymentConfig: paymentConfig()
       });
       return;
@@ -628,13 +680,13 @@ async function handleApi(req, res, pathname) {
       if (!invitation) throw providerError("Invitation studio not found.", 404);
       const fields = [
         "title", "eventType", "date", "venue", "mapUrl", "hostNames", "message",
-        "rsvpDeadline", "coverDirection", "musicDirection"
+        "rsvpDeadline", "customBrief"
       ];
       fields.forEach((field) => {
         if (Object.prototype.hasOwnProperty.call(body, field)) invitation[field] = String(body[field] || "").trim();
       });
-      if (Object.prototype.hasOwnProperty.call(body, "theme")) {
-        invitation.theme = ["ivory", "midnight", "sage"].includes(body.theme) ? body.theme : "ivory";
+      if (!isPaid(invitation) && invitation.payment?.status !== "submitted" && Object.prototype.hasOwnProperty.call(body, "templateId")) {
+        applyTemplate(invitation, body.templateId);
       }
       if (isPaid(invitation) && Object.prototype.hasOwnProperty.call(body, "showRsvp")) {
         invitation.showRsvp = Boolean(body.showRsvp);
@@ -642,69 +694,6 @@ async function handleApi(req, res, pathname) {
       invitation.updatedAt = new Date().toISOString();
       writeDb(db);
       json(res, 200, { invitation: clientInvitation(invitation) });
-      return;
-    }
-
-    const clientCoverMatch = pathname.match(/^\/api\/client\/invitations\/([^/]+)\/generate-cover$/);
-    if (req.method === "POST" && clientCoverMatch) {
-      if (!openAiApiKey) throw providerError("Cover generation is temporarily unavailable.", 503);
-      const body = await readBody(req);
-      const direction = String(body.prompt || "").trim();
-      if (direction.length < 10 || direction.length > 1200) {
-        throw providerError("Cover direction must be between 10 and 1200 characters.", 400);
-      }
-      const db = readDb();
-      const invitation = findInvitationByClientToken(db, decodeURIComponent(clientCoverMatch[1]));
-      if (!invitation) throw providerError("Invitation studio not found.", 404);
-      const usage = getGenerationUsage(invitation);
-      const generationLimit = isPaid(invitation) ? maxCoverGenerations : 1;
-      if (usage.covers >= generationLimit) {
-        throw providerError(isPaid(invitation) ? "Cover generation limit reached." : "Purchase your invitation to generate more covers.", 403);
-      }
-      const quality = isPaid(invitation) ? body.quality : "low";
-      const assetUrl = await generateCover(invitation, direction, quality);
-      const asset = { url: assetUrl, prompt: direction, quality, preview: !isPaid(invitation), createdAt: new Date().toISOString() };
-      invitation.generatedCovers.unshift(asset);
-      invitation.coverImageUrl = assetUrl;
-      usage.covers += 1;
-      invitation.updatedAt = asset.createdAt;
-      writeDb(db);
-      const safeClientInvitation = clientInvitation(invitation);
-      json(res, 201, {
-        invitation: safeClientInvitation,
-        asset: { ...asset, url: safeClientInvitation.coverImageUrl },
-        remaining: Math.max(0, generationLimit - usage.covers)
-      });
-      return;
-    }
-
-    const clientMusicMatch = pathname.match(/^\/api\/client\/invitations\/([^/]+)\/generate-music$/);
-    if (req.method === "POST" && clientMusicMatch) {
-      const body = await readBody(req);
-      const db = readDb();
-      const invitation = findInvitationByClientToken(db, decodeURIComponent(clientMusicMatch[1]));
-      if (!invitation) throw providerError("Invitation studio not found.", 404);
-      if (!isPaid(invitation)) throw providerError("Purchase your invitation to generate a soundtrack.", 402);
-      if (!elevenLabsApiKey) throw providerError("Music generation is temporarily unavailable.", 503);
-      const direction = String(body.prompt || "").trim();
-      const durationSeconds = Math.min(60, Math.max(15, Number(body.durationSeconds || 30)));
-      if (direction.length < 10 || direction.length > 1200) {
-        throw providerError("Music direction must be between 10 and 1200 characters.", 400);
-      }
-      const usage = getGenerationUsage(invitation);
-      if (usage.music >= maxMusicGenerations) throw providerError("Soundtrack generation limit reached.", 403);
-      const assetUrl = await generateMusic(invitation, direction, durationSeconds);
-      const asset = { url: assetUrl, prompt: direction, durationSeconds, createdAt: new Date().toISOString() };
-      invitation.generatedTracks.unshift(asset);
-      invitation.musicUrl = assetUrl;
-      usage.music += 1;
-      invitation.updatedAt = asset.createdAt;
-      writeDb(db);
-      json(res, 201, {
-        invitation: clientInvitation(invitation),
-        asset,
-        remaining: Math.max(0, maxMusicGenerations - usage.music)
-      });
       return;
     }
 
@@ -830,9 +819,7 @@ async function handleApi(req, res, pathname) {
       fields.forEach((field) => {
         if (Object.prototype.hasOwnProperty.call(body, field)) invitation[field] = String(body[field] || "").trim();
       });
-      if (Object.prototype.hasOwnProperty.call(body, "theme")) {
-        invitation.theme = ["ivory", "midnight", "sage"].includes(body.theme) ? body.theme : "ivory";
-      }
+      if (Object.prototype.hasOwnProperty.call(body, "templateId")) applyTemplate(invitation, body.templateId);
       if (Object.prototype.hasOwnProperty.call(body, "showRsvp")) invitation.showRsvp = Boolean(body.showRsvp);
       if (Object.prototype.hasOwnProperty.call(body, "status")) invitation.status = invitationStatus(body.status);
       invitation.updatedAt = new Date().toISOString();

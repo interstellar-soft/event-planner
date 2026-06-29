@@ -206,26 +206,8 @@
             <input id="mapUrl" name="mapUrl" placeholder="Google Maps link" />
           </label>
           <label>
-            Package
+            Invitation template
             <select id="packageName" name="packageName"></select>
-          </label>
-          <label>
-            Visual mood
-            <select id="inviteVisualMood" name="inviteVisualMood">
-              <option>Romantic floral garden</option>
-              <option>Minimal modern elegance</option>
-              <option>Candlelit luxury</option>
-              <option>Joyful colorful celebration</option>
-            </select>
-          </label>
-          <label>
-            Music mood
-            <select id="inviteMusicMood" name="inviteMusicMood">
-              <option>Romantic oud, piano, and strings</option>
-              <option>Peaceful piano and soft strings</option>
-              <option>Upbeat celebration instrumental</option>
-              <option>Modern cinematic instrumental</option>
-            </select>
           </label>
           <fieldset>
             <legend>Add-ons</legend>
@@ -240,7 +222,7 @@
 
         <aside class="preview-phone" id="preview">
           <div class="phone-top"></div>
-          <div class="invite-card">
+          <div class="invite-card template-preview-card" id="storefrontInviteCard">
             <p class="invite-kicker">Wedding Celebration</p>
             <h2 id="previewTitle">Maya & Karim</h2>
             <p id="previewDate">Saturday, 18 July 2026 at 7:30 PM</p>
@@ -357,6 +339,7 @@
       <a href="#booking">Request an event quote</a>
     </footer>
 
+    <script src="templates.js"></script>
     <script src="data.js"></script>
     <script src="script.js"></script>
   </body>

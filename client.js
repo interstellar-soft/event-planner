@@ -2,6 +2,7 @@ const clientToken = decodeURIComponent(window.location.pathname.replace(/^\/stud
 const studio = document.querySelector("#clientStudio");
 const loadError = document.querySelector("#clientLoadError");
 let clientState = null;
+let activeTemplateFilter = "All";
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -36,11 +37,10 @@ function clientEditorPayload() {
     mapUrl: document.querySelector("#clientMapUrl").value,
     rsvpDeadline: document.querySelector("#clientRsvpDeadline").value,
     hostNames: document.querySelector("#clientHostNames").value,
-    theme: document.querySelector("#clientTheme").value,
     message: document.querySelector("#clientMessage").value,
+    customBrief: document.querySelector("#clientCustomBrief").value,
     showRsvp: document.querySelector("#clientShowRsvp").checked,
-    coverDirection: document.querySelector("#clientCoverPrompt").value,
-    musicDirection: document.querySelector("#clientMusicPrompt").value
+    templateId: clientState.invitation.templateId
   };
 }
 
@@ -68,13 +68,8 @@ function paymentStatus(invitation) {
 
 function renderClientState({ preserveFields = false } = {}) {
   const invitation = clientState.invitation;
-  const config = clientState.generationConfig || {};
   const paid = invitation.paid;
   const status = paymentStatus(invitation);
-  const usage = invitation.generationUsage || { covers: 0, music: 0 };
-  const coverLimit = paid ? (config.maxCoverGenerations || 6) : 1;
-  const coverRemaining = Math.max(0, coverLimit - (usage.covers || 0));
-  const musicRemaining = Math.max(0, (config.maxMusicGenerations || 3) - (usage.music || 0));
 
   document.querySelector("#clientStudioTitle").textContent = invitation.title;
   document.querySelector("#clientPackageName").textContent = invitation.packageName;
@@ -91,32 +86,14 @@ function renderClientState({ preserveFields = false } = {}) {
     document.querySelector("#clientMapUrl").value = invitation.mapUrl || "";
     document.querySelector("#clientRsvpDeadline").value = invitation.rsvpDeadline || "";
     document.querySelector("#clientHostNames").value = invitation.hostNames || "";
-    document.querySelector("#clientTheme").value = invitation.theme || "ivory";
     document.querySelector("#clientMessage").value = invitation.message || "";
-    document.querySelector("#clientCoverPrompt").value = invitation.coverDirection || invitation.generatedCovers?.[0]?.prompt || "Elegant floral celebration with warm light and refined details";
-    document.querySelector("#clientMusicPrompt").value = invitation.musicDirection || invitation.generatedTracks?.[0]?.prompt || "Warm instrumental with piano, strings, and subtle Lebanese acoustic textures";
+    document.querySelector("#clientCustomBrief").value = invitation.customBrief || "";
   }
 
   const rsvpToggle = document.querySelector("#clientShowRsvp");
   rsvpToggle.checked = invitation.showRsvp !== false;
   rsvpToggle.disabled = !paid;
-  const quality = document.querySelector("#clientCoverQuality");
-  quality.disabled = !paid;
-  if (!paid) quality.value = "low";
-
-  const coverButton = document.querySelector("#clientGenerateCover");
-  coverButton.disabled = !config.coverEnabled || coverRemaining === 0;
-  coverButton.textContent = paid ? "Generate Cover" : "Generate Free Preview";
-  document.querySelector("#clientCoverState").textContent = config.coverEnabled
-    ? `${coverRemaining} generation${coverRemaining === 1 ? "" : "s"} left`
-    : "Temporarily unavailable";
-
-  const musicButton = document.querySelector("#clientGenerateMusic");
-  musicButton.disabled = !paid || !config.musicEnabled || musicRemaining === 0;
-  document.querySelector("#clientMusicState").textContent = !paid
-    ? "Unlock after purchase"
-    : config.musicEnabled ? `${musicRemaining} generation${musicRemaining === 1 ? "" : "s"} left` : "Temporarily unavailable";
-
+  document.querySelector("#customBriefField").hidden = invitation.templateId !== "custom-atelier";
   document.querySelector("#clientPreviewLink").href = invitation.previewUrl;
   const publishButton = document.querySelector("#clientPublish");
   publishButton.disabled = !paid;
@@ -132,25 +109,39 @@ function renderClientState({ preserveFields = false } = {}) {
     document.querySelector("#clientQrImage").src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(liveUrl)}`;
   }
 
-  renderClientAssets();
+  renderTemplateCatalog();
   renderPaymentPanel();
 }
 
-function renderClientAssets() {
-  const invitation = clientState.invitation;
-  document.querySelector("#clientCoverList").innerHTML = (invitation.generatedCovers || []).map((asset, index) => `
-    <article class="generated-cover ${index === 0 ? "selected" : ""}">
-      <img src="${escapeHtml(asset.url)}" alt="Generated invitation cover option" />
-      <span class="generated-asset-label">${asset.preview ? "Preview" : index === 0 ? "Selected" : "Cover"}</span>
-    </article>
-  `).join("") || `<p class="generator-empty">No cover generated yet.</p>`;
+function templateMiniature(template) {
+  return `<div class="template-miniature invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)}" style="--template-accent:${escapeHtml(template.accent)};--template-canvas:${escapeHtml(template.canvas)};--template-paper:${escapeHtml(template.paper)}">
+    <span class="mini-kicker">Invitation</span><strong>M &amp; K</strong><span class="mini-rule"></span><small>18 · 07 · 2026</small>
+  </div>`;
+}
 
-  document.querySelector("#clientTrackList").innerHTML = (invitation.generatedTracks || []).map((asset, index) => `
-    <article class="generated-track ${index === 0 ? "selected" : ""}">
-      <audio controls preload="none" src="${escapeHtml(asset.url)}"></audio>
-      <span>${index === 0 ? "Selected" : "Soundtrack"}</span>
-    </article>
-  `).join("") || `<p class="generator-empty">Soundtrack unlocks after purchase.</p>`;
+function renderTemplateCatalog() {
+  const templates = clientState.templates || [];
+  const invitation = clientState.invitation;
+  const selectionLocked = invitation.paid || paymentStatus(invitation) === "submitted";
+  const categories = ["All", ...new Set(templates.map((template) => template.category))];
+  document.querySelector("#clientTemplateFilter").innerHTML = categories.map((category) => `
+    <button type="button" class="template-filter-button ${category === activeTemplateFilter ? "active" : ""}" data-template-filter="${escapeHtml(category)}">${escapeHtml(category)}</button>
+  `).join("");
+  const visible = activeTemplateFilter === "All" ? templates : templates.filter((template) => template.category === activeTemplateFilter);
+  document.querySelector("#clientTemplateGrid").innerHTML = visible.map((template) => {
+    const selected = template.id === invitation.templateId;
+    return `<article class="client-template-card ${selected ? "selected" : ""} ${template.custom ? "custom" : ""}">
+      ${templateMiniature(template)}
+      <div class="client-template-meta">
+        <div><span>${escapeHtml(template.category)} · ${escapeHtml(template.tier)}</span><strong>${escapeHtml(template.name)}</strong></div>
+        <b>$${template.price}</b>
+      </div>
+      <p>${escapeHtml(template.description)}</p>
+      <button class="button ${selected ? "primary" : "outline"} full" type="button" data-select-template="${escapeHtml(template.id)}" ${selected || selectionLocked ? "disabled" : ""}>${selected ? "Selected" : selectionLocked ? "Selection locked" : "Choose template"}</button>
+    </article>`;
+  }).join("");
+  const selectedTemplate = templates.find((template) => template.id === invitation.templateId);
+  document.querySelector("#selectedTemplateSummary").textContent = selectedTemplate ? `${selectedTemplate.name} · $${selectedTemplate.price}` : "";
 }
 
 function renderPaymentPanel() {
@@ -190,43 +181,35 @@ async function loadClientStudio() {
   }
 }
 
-async function generateClientAsset(kind) {
-  const isCover = kind === "cover";
-  const message = document.querySelector(isCover ? "#clientCoverMessage" : "#clientMusicMessage");
-  const button = document.querySelector(isCover ? "#clientGenerateCover" : "#clientGenerateMusic");
-  const prompt = document.querySelector(isCover ? "#clientCoverPrompt" : "#clientMusicPrompt").value.trim();
-  if (prompt.length < 10) {
-    message.textContent = "Add a little more creative direction.";
-    return;
-  }
-  if (!(await saveClientDetails("Details saved."))) return;
-  button.disabled = true;
-  button.textContent = isCover ? "Generating..." : "Composing...";
-  message.textContent = isCover ? "Creating your invitation artwork..." : "Composing your original soundtrack...";
-  try {
-    const payload = isCover
-      ? { prompt, quality: document.querySelector("#clientCoverQuality").value }
-      : { prompt, durationSeconds: Number(document.querySelector("#clientMusicDuration").value) };
-    const result = await clientApi(apiPath(isCover ? "/generate-cover" : "/generate-music"), {
-      method: "POST",
-      body: JSON.stringify(payload)
-    });
-    clientState.invitation = result.invitation;
-    renderClientState({ preserveFields: true });
-    message.textContent = `${isCover ? "Cover" : "Soundtrack"} generated. ${result.remaining} generation${result.remaining === 1 ? "" : "s"} left.`;
-  } catch (error) {
-    message.textContent = error.message;
-    renderClientState({ preserveFields: true });
-  }
-}
-
 document.querySelector("#clientEditorForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   await saveClientDetails();
 });
 
-document.querySelector("#clientGenerateCover").addEventListener("click", () => generateClientAsset("cover"));
-document.querySelector("#clientGenerateMusic").addEventListener("click", () => generateClientAsset("music"));
+document.querySelector("#clientTemplateFilter").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-template-filter]");
+  if (!button) return;
+  activeTemplateFilter = button.dataset.templateFilter;
+  renderTemplateCatalog();
+});
+
+document.querySelector("#clientTemplateGrid").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-select-template]");
+  if (!button || clientState.invitation.paid || paymentStatus(clientState.invitation) === "submitted") return;
+  const message = document.querySelector("#clientTemplateMessage");
+  message.textContent = "Applying template...";
+  try {
+    const result = await clientApi(apiPath(), {
+      method: "PUT",
+      body: JSON.stringify({ ...clientEditorPayload(), templateId: button.dataset.selectTemplate })
+    });
+    clientState.invitation = result.invitation;
+    renderClientState({ preserveFields: true });
+    message.textContent = "Template selected. Open the preview to see the complete design.";
+  } catch (error) {
+    message.textContent = error.message;
+  }
+});
 
 document.querySelector("#paymentClaimForm").addEventListener("submit", async (event) => {
   event.preventDefault();

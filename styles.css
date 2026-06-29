@@ -1983,3 +1983,698 @@ textarea:focus {
     position: static;
   }
 }
+
+/* Complete invitation template system */
+.client-template-section {
+  display: grid;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  padding: clamp(18px, 3vw, 28px);
+  box-shadow: 0 14px 38px rgba(24, 33, 38, 0.08);
+}
+
+.client-template-section h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.selected-template-summary,
+.template-tier {
+  color: var(--sage);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.template-filter {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding-bottom: 3px;
+}
+
+.template-filter-button {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--muted-ink);
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.template-filter-button.active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
+}
+
+.client-template-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.client-template-card {
+  display: grid;
+  align-content: start;
+  gap: 11px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+}
+
+.client-template-card.selected {
+  border-color: var(--sage);
+  box-shadow: 0 0 0 2px rgba(47, 123, 104, 0.14);
+}
+
+.client-template-card.custom {
+  border-color: #b78335;
+}
+
+.client-template-meta {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.client-template-meta span,
+.client-template-meta strong {
+  display: block;
+}
+
+.client-template-meta span {
+  color: var(--muted-ink);
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.client-template-meta strong {
+  margin-top: 2px;
+  font-size: 0.94rem;
+}
+
+.client-template-meta b {
+  color: var(--sage);
+  font-size: 1rem;
+}
+
+.client-template-card p {
+  margin: 0;
+  color: var(--muted-ink);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.client-template-card .button {
+  align-self: end;
+  min-height: 40px;
+  padding: 9px;
+  font-size: 0.76rem;
+}
+
+.template-miniature,
+.template-art {
+  position: relative;
+  overflow: hidden;
+  background: var(--template-canvas);
+  color: var(--template-accent);
+}
+
+.template-miniature {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 6px;
+  padding: 14px;
+  text-align: center;
+}
+
+.template-miniature::before,
+.template-art::before {
+  content: "";
+  position: absolute;
+  inset: 9%;
+  border: 1px solid color-mix(in srgb, var(--template-accent) 45%, transparent);
+  pointer-events: none;
+}
+
+.template-miniature strong,
+.template-miniature span,
+.template-miniature small {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+
+.template-miniature strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+}
+
+.template-miniature .mini-kicker,
+.template-miniature small {
+  font-size: 0.6rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.template-miniature .mini-rule {
+  width: 34px;
+  height: 1px;
+  margin: 7px auto;
+  background: currentColor;
+}
+
+.template-art {
+  background: var(--template-canvas) !important;
+}
+
+.template-art > div {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  width: 72%;
+  height: 76%;
+  border-radius: 0;
+  background: var(--template-paper) !important;
+  color: var(--template-accent);
+}
+
+.template-art span,
+.template-art small {
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.template-art strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.7rem;
+}
+
+.preview-phone .template-preview-card {
+  border: 1px solid color-mix(in srgb, var(--template-accent) 50%, transparent);
+  background: var(--template-paper);
+  color: var(--template-accent);
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.preview-phone .template-preview-card h2 {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.preview-phone .template-preview-card p {
+  color: color-mix(in srgb, var(--template-accent) 76%, #293136);
+}
+
+.template-art.invite-layout-letter > div,
+.template-miniature.invite-layout-letter {
+  place-items: start;
+  justify-content: center;
+  text-align: left;
+  transform: rotate(-1.5deg);
+}
+
+.template-art.invite-layout-halo > div,
+.template-art.invite-layout-celestial > div,
+.template-art.invite-layout-moonlit > div,
+.template-miniature.invite-layout-halo,
+.template-miniature.invite-layout-celestial,
+.template-miniature.invite-layout-moonlit {
+  border-radius: 50% 50% 10px 10px;
+}
+
+.template-art.invite-layout-playful > div,
+.template-art.invite-layout-poster > div,
+.template-miniature.invite-layout-playful,
+.template-miniature.invite-layout-poster {
+  place-items: start;
+  justify-content: end;
+  text-align: left;
+  transform: rotate(2deg);
+}
+
+.template-art.invite-layout-playful strong,
+.template-art.invite-layout-poster strong,
+.template-miniature.invite-layout-playful strong,
+.template-miniature.invite-layout-poster strong,
+.template-art.invite-layout-editorial strong,
+.template-miniature.invite-layout-editorial strong {
+  font-family: Arial, sans-serif;
+  font-weight: 950;
+}
+
+.template-art.invite-layout-agenda > div,
+.template-miniature.invite-layout-agenda,
+.template-art.invite-layout-editorial > div,
+.template-miniature.invite-layout-editorial {
+  place-items: start;
+  justify-content: center;
+  border-left: 6px solid var(--template-accent);
+  text-align: left;
+}
+
+.template-art.invite-layout-cinematic > div,
+.template-miniature.invite-layout-cinematic,
+.template-art.invite-layout-moonlit > div,
+.template-miniature.invite-layout-moonlit {
+  background: var(--template-paper) !important;
+  color: var(--template-accent);
+  box-shadow: inset 0 0 0 1px var(--template-accent);
+}
+
+.template-art.invite-layout-arch > div,
+.template-art.invite-layout-botanical > div,
+.template-art.invite-layout-cathedral > div,
+.template-miniature.invite-layout-arch,
+.template-miniature.invite-layout-botanical,
+.template-miniature.invite-layout-cathedral {
+  border-radius: 100px 100px 4px 4px;
+}
+
+.template-art.invite-layout-coastal > div,
+.template-miniature.invite-layout-coastal {
+  border-left: 10px solid var(--template-accent);
+  place-items: start;
+  justify-content: center;
+  text-align: left;
+}
+
+.template-art.invite-layout-monogram::after,
+.template-miniature.invite-layout-monogram::after {
+  content: "M";
+  position: absolute;
+  top: -18%;
+  right: -2%;
+  color: var(--template-accent);
+  font-family: Georgia, serif;
+  font-size: 10rem;
+  opacity: 0.12;
+}
+
+.template-art.invite-layout-split > div,
+.template-miniature.invite-layout-split {
+  margin-left: 30%;
+  width: 62%;
+  place-items: start;
+  justify-content: center;
+  text-align: left;
+}
+
+.template-art.invite-layout-majlis > div,
+.template-miniature.invite-layout-majlis {
+  border: 3px double var(--template-accent);
+}
+
+.invite-public-body {
+  background:
+    linear-gradient(180deg, rgba(10, 14, 16, 0.08), rgba(10, 14, 16, 0.28)),
+    var(--invite-cover, var(--template-canvas));
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+.invite-public-card {
+  overflow: hidden;
+  width: min(640px, 100%);
+  border-color: color-mix(in srgb, var(--template-accent) 44%, transparent);
+  background: var(--template-paper);
+  color: #1a2023;
+}
+
+.invite-content {
+  position: relative;
+  z-index: 2;
+}
+
+.invite-template-label {
+  margin: 0 0 16px;
+  color: var(--template-accent);
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.invite-decoration {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.invite-kicker,
+.invite-deadline {
+  color: var(--template-accent);
+}
+
+.invite-location.button {
+  border-color: var(--template-accent);
+  color: var(--template-accent);
+}
+
+.public-rsvp-form {
+  position: relative;
+  z-index: 2;
+}
+
+.public-rsvp-form .button.primary,
+.invite-unlock.button.primary {
+  background: var(--template-accent);
+}
+
+/* Classic and bordered */
+.invite-layout-classic .invite-decoration::before,
+.invite-layout-bordered .invite-decoration::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border: 1px solid var(--template-accent);
+  opacity: 0.42;
+}
+
+.invite-layout-bordered .invite-public-card {
+  border: 8px solid var(--template-paper);
+  outline: 2px solid var(--template-accent);
+  outline-offset: -18px;
+}
+
+/* Letter */
+.invite-layout-letter .invite-public-card,
+.invite-layout-letter .template-miniature {
+  transform: rotate(-0.7deg);
+  text-align: left;
+}
+
+.invite-layout-letter .invite-content,
+.invite-layout-letter .public-rsvp-form {
+  max-width: 470px;
+  margin-inline: auto;
+}
+
+.invite-layout-letter .invite-decoration span:first-child {
+  position: absolute;
+  top: 34px;
+  right: 34px;
+  width: 54px;
+  height: 54px;
+  border: 2px solid var(--template-accent);
+  border-radius: 50%;
+}
+
+/* Halo and celestial */
+.invite-layout-halo .invite-decoration span:first-child,
+.invite-layout-celestial .invite-decoration span:first-child,
+.invite-layout-moonlit .invite-decoration span:first-child {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  border: 1px solid var(--template-accent);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  opacity: 0.32;
+}
+
+.invite-layout-celestial .invite-public-card,
+.invite-layout-moonlit .invite-public-card {
+  padding-top: 82px;
+}
+
+.invite-layout-celestial .invite-decoration::after,
+.invite-layout-moonlit .invite-decoration::after {
+  content: "✦  ·  ✧  ·  ✦";
+  position: absolute;
+  top: 38px;
+  left: 50%;
+  color: var(--template-accent);
+  transform: translateX(-50%);
+}
+
+/* Playful and poster */
+.invite-layout-playful .invite-public-card,
+.invite-layout-poster .invite-public-card {
+  text-align: left;
+}
+
+.invite-layout-playful .invite-public-card h1,
+.invite-layout-poster .invite-public-card h1 {
+  max-width: 500px;
+  font-family: Arial, sans-serif;
+  font-weight: 950;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.invite-layout-playful .invite-details,
+.invite-layout-poster .invite-details {
+  border: 0;
+  background: var(--template-accent);
+  color: #fff;
+  padding: 16px;
+}
+
+.invite-layout-playful .invite-decoration span {
+  position: absolute;
+  width: 24px;
+  height: 60px;
+  background: var(--template-accent);
+  transform: rotate(35deg);
+  opacity: 0.22;
+}
+
+.invite-layout-playful .invite-decoration span:nth-child(1) { top: 10%; right: 8%; }
+.invite-layout-playful .invite-decoration span:nth-child(2) { bottom: 20%; left: 4%; transform: rotate(-48deg); }
+.invite-layout-playful .invite-decoration span:nth-child(3) { top: 45%; right: 2%; transform: rotate(75deg); }
+
+/* Agenda and editorial */
+.invite-layout-agenda .invite-public-card,
+.invite-layout-editorial .invite-public-card {
+  text-align: left;
+}
+
+.invite-layout-agenda .invite-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  border: 0;
+  border-left: 4px solid var(--template-accent);
+  padding-left: 18px;
+}
+
+.invite-layout-editorial .invite-public-card h1 {
+  font-family: Arial, sans-serif;
+  font-size: clamp(3.5rem, 11vw, 7rem);
+  font-weight: 950;
+  line-height: 0.82;
+  text-transform: uppercase;
+}
+
+.invite-template-editorial-black .invite-public-card {
+  background: #0b0b0b;
+  color: #f4f1e8;
+}
+
+.invite-template-editorial-black .invite-message,
+.invite-template-editorial-black .invite-hosts,
+.invite-template-editorial-black .invite-details,
+.invite-template-moonlit-romance .invite-message,
+.invite-template-moonlit-romance .invite-hosts,
+.invite-template-moonlit-romance .invite-details,
+.invite-template-midnight-oud .invite-message,
+.invite-template-midnight-oud .invite-hosts,
+.invite-template-midnight-oud .invite-details {
+  color: rgba(255, 255, 255, 0.76);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Cinematic and moonlit */
+.invite-layout-cinematic .invite-public-card,
+.invite-layout-moonlit .invite-public-card {
+  background: color-mix(in srgb, var(--template-paper) 96%, black);
+  color: #fffaf0;
+  box-shadow: 0 34px 100px rgba(0, 0, 0, 0.56);
+}
+
+.invite-layout-cinematic .invite-public-card::after {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border: 1px solid var(--template-accent);
+  opacity: 0.4;
+}
+
+/* Arch, botanical, cathedral */
+.invite-layout-arch .invite-public-card,
+.invite-layout-botanical .invite-public-card,
+.invite-layout-cathedral .invite-public-card {
+  border-radius: 220px 220px 8px 8px;
+  padding-top: 100px;
+}
+
+.invite-layout-botanical .invite-decoration::before,
+.invite-layout-cathedral .invite-decoration::before {
+  content: "";
+  position: absolute;
+  inset: 24px;
+  border: 2px solid var(--template-accent);
+  border-radius: 190px 190px 4px 4px;
+  opacity: 0.32;
+}
+
+.invite-layout-cathedral .invite-decoration::after {
+  content: "✦";
+  position: absolute;
+  top: 42px;
+  left: 50%;
+  color: var(--template-accent);
+  font-size: 2rem;
+  transform: translateX(-50%);
+}
+
+/* Coastal */
+.invite-layout-coastal .invite-public-card {
+  border-left: 14px solid var(--template-accent);
+  text-align: left;
+}
+
+.invite-layout-coastal .invite-details {
+  border: 0;
+  padding-left: 0;
+}
+
+/* Monogram */
+.invite-layout-monogram .invite-decoration::before {
+  content: "M";
+  position: absolute;
+  top: -70px;
+  right: -20px;
+  color: var(--template-accent);
+  font-family: Georgia, serif;
+  font-size: 19rem;
+  line-height: 1;
+  opacity: 0.08;
+}
+
+.invite-layout-monogram .invite-public-card {
+  text-align: left;
+}
+
+/* Split */
+.invite-layout-split .invite-public-card {
+  background: linear-gradient(90deg, var(--template-paper) 0 34%, #fffdf8 34%);
+  padding-left: 40%;
+  text-align: left;
+}
+
+.invite-layout-split .invite-decoration::before {
+  content: "SAVE\A THE\A DATE";
+  position: absolute;
+  top: 120px;
+  left: 5%;
+  width: 25%;
+  color: var(--template-accent);
+  font-size: 1.1rem;
+  font-weight: 950;
+  line-height: 1.15;
+  white-space: pre;
+}
+
+/* Majlis */
+.invite-layout-majlis .invite-decoration::before,
+.invite-layout-majlis .invite-decoration::after {
+  content: "";
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-color: var(--template-accent);
+  opacity: 0.28;
+}
+
+.invite-layout-majlis .invite-decoration::before {
+  top: 18px;
+  left: 18px;
+  border-top: 3px solid;
+  border-left: 3px solid;
+  border-radius: 80px 0 0;
+}
+
+.invite-layout-majlis .invite-decoration::after {
+  right: 18px;
+  bottom: 18px;
+  border-right: 3px solid;
+  border-bottom: 3px solid;
+  border-radius: 0 0 80px;
+}
+
+/* Custom */
+.invite-layout-custom .invite-public-card {
+  border: 2px solid var(--template-accent);
+  background: color-mix(in srgb, var(--template-paper) 94%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.invite-layout-custom .invite-template-label::after {
+  content: " · Studio art direction";
+}
+
+@media (max-width: 1080px) {
+  .client-template-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .client-template-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .template-miniature {
+    aspect-ratio: 16 / 10;
+  }
+
+  .invite-public-page {
+    padding: 12px;
+  }
+
+  .invite-public-card,
+  .invite-layout-arch .invite-public-card,
+  .invite-layout-botanical .invite-public-card,
+  .invite-layout-cathedral .invite-public-card {
+    border-radius: 6px;
+    padding: 66px 22px 28px;
+  }
+
+  .invite-preview-banner {
+    margin: -66px -22px 24px;
+  }
+
+  .invite-layout-split .invite-public-card {
+    background: var(--template-paper);
+    padding-left: 22px;
+  }
+
+  .invite-layout-split .invite-decoration::before {
+    display: none;
+  }
+
+  .invite-layout-agenda .invite-details {
+    grid-template-columns: 1fr;
+  }
+}
