@@ -36,6 +36,20 @@ function applyContentText() {
   });
 }
 
+function templateSample(template) {
+  const samples = {
+    Wedding: { kicker: "Together with their families", name: "M & K", date: "18 · 07 · 2026" },
+    Engagement: { kicker: "Engagement celebration", name: "M & K", date: "18 · 07 · 2026" },
+    Baptism: { kicker: "The Holy Baptism of", name: "Elias", date: "14 · 06 · 2026" },
+    "First Communion": { kicker: "First Holy Communion", name: "Maria", date: "24 · 05 · 2026" },
+    Birthday: { kicker: "Come celebrate", name: "Nour", date: "12 · 09 · 2026" },
+    Business: { kicker: "You are invited", name: "Studio Launch", date: "03 · 10 · 2026" },
+    "Other Celebrations": { kicker: "A special celebration", name: "Class of 2026", date: "27 · 06 · 2026" },
+    "Custom Design": { kicker: "Created for you", name: "Your Story", date: "Your date" }
+  };
+  return samples[template.category] || samples["Custom Design"];
+}
+
 function renderTemplates() {
   const availableCategories = templateCategoryOrder.filter((category) => invitationTemplates.some((template) => template.category === category));
   document.querySelector("#templateCategoryNav").innerHTML = availableCategories.map((category) => `
@@ -45,10 +59,12 @@ function renderTemplates() {
   templateGrid.innerHTML = invitationTemplates
     .filter((template) => template.category === activeStorefrontCategory)
     .map(
-      (template) => `
+      (template) => {
+        const sample = templateSample(template);
+        return `
         <article class="template-card">
           <div class="template-art ${template.image ? "has-cover" : ""} invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)}" style="--template-accent:${escapeHtml(template.accent)};--template-canvas:${escapeHtml(template.canvas)};--template-paper:${escapeHtml(template.paper)};--template-image:url('${escapeHtml(template.image || "")}')">
-            <div><span>Invitation</span><strong>M &amp; K</strong><small>18 · 07 · 2026</small></div>
+            <div><span>${escapeHtml(sample.kicker)}</span><strong>${escapeHtml(sample.name)}</strong><small>${escapeHtml(sample.date)}</small></div>
           </div>
           <footer>
             <span class="template-tier">${escapeHtml(template.category)} · ${escapeHtml(template.tier)}</span>
@@ -58,7 +74,8 @@ function renderTemplates() {
             <button class="button" type="button" data-template="${escapeHtml(template.id)}">Choose template</button>
           </footer>
         </article>
-      `
+      `;
+      }
     )
     .join("");
 }

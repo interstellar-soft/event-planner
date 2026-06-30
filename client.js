@@ -114,9 +114,24 @@ function renderClientState({ preserveFields = false } = {}) {
   renderPaymentPanel();
 }
 
+function templateSample(template) {
+  const samples = {
+    Wedding: { kicker: "Together with their families", name: "M & K", date: "18 · 07 · 2026" },
+    Engagement: { kicker: "Engagement celebration", name: "M & K", date: "18 · 07 · 2026" },
+    Baptism: { kicker: "The Holy Baptism of", name: "Elias", date: "14 · 06 · 2026" },
+    "First Communion": { kicker: "First Holy Communion", name: "Maria", date: "24 · 05 · 2026" },
+    Birthday: { kicker: "Come celebrate", name: "Nour", date: "12 · 09 · 2026" },
+    Business: { kicker: "You are invited", name: "Studio Launch", date: "03 · 10 · 2026" },
+    "Other Celebrations": { kicker: "A special celebration", name: "Class of 2026", date: "27 · 06 · 2026" },
+    "Custom Design": { kicker: "Created for you", name: "Your Story", date: "Your date" }
+  };
+  return samples[template.category] || samples["Custom Design"];
+}
+
 function templateMiniature(template) {
+  const sample = templateSample(template);
   return `<div class="template-miniature ${template.image ? "has-cover" : ""} invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)}" style="--template-accent:${escapeHtml(template.accent)};--template-canvas:${escapeHtml(template.canvas)};--template-paper:${escapeHtml(template.paper)};--template-image:url('${escapeHtml(template.image || "")}')">
-    <span class="mini-kicker">Invitation</span><strong>M &amp; K</strong><span class="mini-rule"></span><small>18 · 07 · 2026</small>
+    <span class="mini-kicker">${escapeHtml(sample.kicker)}</span><strong>${escapeHtml(sample.name)}</strong><span class="mini-rule"></span><small>${escapeHtml(sample.date)}</small>
   </div>`;
 }
 
