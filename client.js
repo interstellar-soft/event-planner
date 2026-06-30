@@ -2,7 +2,8 @@ const clientToken = decodeURIComponent(window.location.pathname.replace(/^\/stud
 const studio = document.querySelector("#clientStudio");
 const loadError = document.querySelector("#clientLoadError");
 let clientState = null;
-let activeTemplateFilter = "All";
+const templateCategoryOrder = ["Wedding", "Baptism", "First Communion", "Engagement", "Birthday", "Business", "Other Celebrations", "Custom Design"];
+let activeTemplateFilter = "";
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -114,7 +115,7 @@ function renderClientState({ preserveFields = false } = {}) {
 }
 
 function templateMiniature(template) {
-  return `<div class="template-miniature invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)}" style="--template-accent:${escapeHtml(template.accent)};--template-canvas:${escapeHtml(template.canvas)};--template-paper:${escapeHtml(template.paper)}">
+  return `<div class="template-miniature ${template.image ? "has-cover" : ""} invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)}" style="--template-accent:${escapeHtml(template.accent)};--template-canvas:${escapeHtml(template.canvas)};--template-paper:${escapeHtml(template.paper)};--template-image:url('${escapeHtml(template.image || "")}')">
     <span class="mini-kicker">Invitation</span><strong>M &amp; K</strong><span class="mini-rule"></span><small>18 · 07 · 2026</small>
   </div>`;
 }
@@ -123,11 +124,15 @@ function renderTemplateCatalog() {
   const templates = clientState.templates || [];
   const invitation = clientState.invitation;
   const selectionLocked = invitation.paid || paymentStatus(invitation) === "submitted";
-  const categories = ["All", ...new Set(templates.map((template) => template.category))];
+  const selectedTemplate = templates.find((template) => template.id === invitation.templateId);
+  const categories = templateCategoryOrder.filter((category) => templates.some((template) => template.category === category));
+  if (!activeTemplateFilter || !categories.includes(activeTemplateFilter)) {
+    activeTemplateFilter = selectedTemplate?.category || categories[0];
+  }
   document.querySelector("#clientTemplateFilter").innerHTML = categories.map((category) => `
-    <button type="button" class="template-filter-button ${category === activeTemplateFilter ? "active" : ""}" data-template-filter="${escapeHtml(category)}">${escapeHtml(category)}</button>
+    <button type="button" class="template-filter-button ${category === activeTemplateFilter ? "active" : ""}" data-template-filter="${escapeHtml(category)}">${escapeHtml(category)} <span>${templates.filter((template) => template.category === category).length}</span></button>
   `).join("");
-  const visible = activeTemplateFilter === "All" ? templates : templates.filter((template) => template.category === activeTemplateFilter);
+  const visible = templates.filter((template) => template.category === activeTemplateFilter);
   document.querySelector("#clientTemplateGrid").innerHTML = visible.map((template) => {
     const selected = template.id === invitation.templateId;
     return `<article class="client-template-card ${selected ? "selected" : ""} ${template.custom ? "custom" : ""}">
@@ -140,7 +145,6 @@ function renderTemplateCatalog() {
       <button class="button ${selected ? "primary" : "outline"} full" type="button" data-select-template="${escapeHtml(template.id)}" ${selected || selectionLocked ? "disabled" : ""}>${selected ? "Selected" : selectionLocked ? "Selection locked" : "Choose template"}</button>
     </article>`;
   }).join("");
-  const selectedTemplate = templates.find((template) => template.id === invitation.templateId);
   document.querySelector("#selectedTemplateSummary").textContent = selectedTemplate ? `${selectedTemplate.name} · $${selectedTemplate.price}` : "";
 }
 

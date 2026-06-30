@@ -487,7 +487,8 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
   const isPreview = adminPreview || clientPreview;
   const locked = clientPreview && !isPaid(invite);
   const template = templateFor(invite.templateId);
-  const rawCoverImageUrl = locked && invite.clientToken ? `/preview-cover/${encodeURIComponent(invite.clientToken)}` : invite.coverImageUrl;
+  const customCoverUrl = locked && invite.coverImageUrl && invite.clientToken ? `/preview-cover/${encodeURIComponent(invite.clientToken)}` : invite.coverImageUrl;
+  const rawCoverImageUrl = customCoverUrl || template.image;
   const coverImageUrl = safePublicUrl(rawCoverImageUrl, { allowLocal: true });
   const musicUrl = safePublicUrl(invite.musicUrl, { allowLocal: true });
   const hostNames = escapeHtml(invite.hostNames || "Together with their families");

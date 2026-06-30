@@ -295,6 +295,48 @@ a {
   gap: 18px;
 }
 
+.template-category-nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 0 22px;
+  padding: 2px 0 8px;
+  scrollbar-width: thin;
+}
+
+.template-category-button {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--muted-ink);
+  padding: 10px 15px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.template-category-button.active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
+}
+
+.template-category-heading {
+  margin-bottom: 18px;
+}
+
+.template-category-heading h3 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.template-category-heading p {
+  max-width: 680px;
+  margin: 5px 0 0;
+}
+
 .template-card,
 .price-card,
 .revenue-list article,
@@ -516,10 +558,7 @@ a {
 }
 
 .rate-card-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(250px, 0.42fr);
-  gap: 24px;
-  align-items: start;
+  display: block;
 }
 
 .package-category-grid {
@@ -571,27 +610,6 @@ a {
 .package-item strong {
   white-space: nowrap;
   color: var(--ink);
-}
-
-.rate-card-reference {
-  margin: 0;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--ink);
-  overflow: hidden;
-  box-shadow: 0 18px 48px rgba(24, 33, 38, 0.12);
-}
-
-.rate-card-reference img {
-  display: block;
-  width: 100%;
-}
-
-.rate-card-reference figcaption {
-  color: rgba(255, 255, 255, 0.78);
-  padding: 12px;
-  font-size: 0.84rem;
-  font-weight: 800;
 }
 
 .price-card {
@@ -1842,7 +1860,6 @@ textarea:focus {
   .response-list,
   .portfolio-grid,
   .package-category-grid,
-  .rate-card-layout,
   .service-grid,
   .studio-dashboard,
   .admin-grid,
@@ -2034,6 +2051,21 @@ textarea:focus {
   color: var(--white);
 }
 
+.template-filter-button span {
+  display: inline-grid;
+  min-width: 20px;
+  height: 20px;
+  place-items: center;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: rgba(24, 33, 38, 0.08);
+  font-size: 0.68rem;
+}
+
+.template-filter-button.active span {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .client-template-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2111,6 +2143,13 @@ textarea:focus {
   color: var(--template-accent);
 }
 
+.template-miniature.has-cover,
+.template-art.has-cover {
+  background:
+    linear-gradient(180deg, rgba(13, 18, 20, 0.06), rgba(13, 18, 20, 0.34)),
+    var(--template-image) center / cover no-repeat !important;
+}
+
 .template-miniature {
   display: grid;
   place-items: center;
@@ -2161,6 +2200,12 @@ textarea:focus {
   background: var(--template-canvas) !important;
 }
 
+.template-art.has-cover {
+  background:
+    linear-gradient(180deg, rgba(13, 18, 20, 0.04), rgba(13, 18, 20, 0.34)),
+    var(--template-image) center / cover no-repeat !important;
+}
+
 .template-art > div {
   position: relative;
   z-index: 1;
@@ -2173,6 +2218,29 @@ textarea:focus {
   border-radius: 0;
   background: var(--template-paper) !important;
   color: var(--template-accent);
+}
+
+.template-art.has-cover > div {
+  width: 68%;
+  height: 44%;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: color-mix(in srgb, var(--template-paper) 82%, transparent) !important;
+  box-shadow: 0 16px 40px rgba(12, 16, 18, 0.18);
+  backdrop-filter: blur(7px);
+}
+
+.template-miniature.has-cover {
+  color: var(--template-accent);
+}
+
+.template-miniature.has-cover::after {
+  content: "";
+  position: absolute;
+  inset: 24% 14%;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: color-mix(in srgb, var(--template-paper) 82%, transparent);
+  box-shadow: 0 12px 30px rgba(12, 16, 18, 0.18);
+  backdrop-filter: blur(5px);
 }
 
 .template-art span,
@@ -2314,8 +2382,9 @@ textarea:focus {
   overflow: hidden;
   width: min(640px, 100%);
   border-color: color-mix(in srgb, var(--template-accent) 44%, transparent);
-  background: var(--template-paper);
+  background: color-mix(in srgb, var(--template-paper) 90%, transparent);
   color: #1a2023;
+  backdrop-filter: blur(12px);
 }
 
 .invite-content {

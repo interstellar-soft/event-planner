@@ -1,5 +1,16 @@
 const content = window.siteContent || {};
 const invitationTemplates = window.invitationTemplates || [];
+const templateCategoryOrder = ["Wedding", "Baptism", "First Communion", "Engagement", "Birthday", "Business", "Other Celebrations", "Custom Design"];
+const templateCategoryDescriptions = {
+  Wedding: "Romantic garden, evening, coastal, and destination wedding designs.",
+  Baptism: "Luminous, peaceful designs created for church and family celebrations.",
+  "First Communion": "Dedicated sacramental designs in ivory, pearl blue, olive, and gold.",
+  Engagement: "Intimate and cinematic designs for proposals and engagement celebrations.",
+  Birthday: "Colorful, polished party designs for children and adults.",
+  Business: "Clear, modern invitations for launches, openings, and corporate events.",
+  "Other Celebrations": "Flexible premium designs for graduations, anniversaries, and private events.",
+  "Custom Design": "A bespoke design, cover, and optional soundtrack prepared by Tony's studio."
+};
 
 const templateGrid = document.querySelector("#templateGrid");
 const portfolioGrid = document.querySelector("#portfolioGrid");
@@ -9,6 +20,7 @@ const invitationPricingGrid = document.querySelector("#invitationPricingGrid");
 const orderForm = document.querySelector("#orderForm");
 const mediaBookingForm = document.querySelector("#mediaBookingForm");
 let selectedInvitationTemplate = "ivory-garden";
+let activeStorefrontCategory = "Wedding";
 
 function getPathValue(source, path) {
   return path.split(".").reduce((value, key) => value?.[key], source);
@@ -25,11 +37,17 @@ function applyContentText() {
 }
 
 function renderTemplates() {
+  const availableCategories = templateCategoryOrder.filter((category) => invitationTemplates.some((template) => template.category === category));
+  document.querySelector("#templateCategoryNav").innerHTML = availableCategories.map((category) => `
+    <button class="template-category-button ${category === activeStorefrontCategory ? "active" : ""}" type="button" data-storefront-category="${escapeHtml(category)}">${escapeHtml(category)}</button>
+  `).join("");
+  document.querySelector("#templateCategoryHeading").innerHTML = `<h3>${escapeHtml(activeStorefrontCategory)}</h3><p>${escapeHtml(templateCategoryDescriptions[activeStorefrontCategory] || "")}</p>`;
   templateGrid.innerHTML = invitationTemplates
+    .filter((template) => template.category === activeStorefrontCategory)
     .map(
       (template) => `
         <article class="template-card">
-          <div class="template-art invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)}" style="--template-accent:${escapeHtml(template.accent)};--template-canvas:${escapeHtml(template.canvas)};--template-paper:${escapeHtml(template.paper)}">
+          <div class="template-art ${template.image ? "has-cover" : ""} invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)}" style="--template-accent:${escapeHtml(template.accent)};--template-canvas:${escapeHtml(template.canvas)};--template-paper:${escapeHtml(template.paper)};--template-image:url('${escapeHtml(template.image || "")}')">
             <div><span>Invitation</span><strong>M &amp; K</strong><small>18 · 07 · 2026</small></div>
           </div>
           <footer>
@@ -107,9 +125,10 @@ function renderPriceCards(target, packages, actionType) {
 }
 
 function renderPackageSelects() {
-  document.querySelector("#packageName").innerHTML = invitationTemplates
-    .map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)} · $${item.price}</option>`)
-    .join("");
+  document.querySelector("#packageName").innerHTML = templateCategoryOrder.map((category) => {
+    const options = invitationTemplates.filter((item) => item.category === category);
+    return options.length ? `<optgroup label="${escapeHtml(category)}">${options.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)} · $${item.price}</option>`).join("")}</optgroup>` : "";
+  }).join("");
   document.querySelector("#mediaPackage").innerHTML = [
     ...content.mediaBundles.map((item) => item.name),
     "Custom crew"
@@ -155,6 +174,7 @@ function updatePreview() {
     previewCard.style.setProperty("--template-accent", template.accent);
     previewCard.style.setProperty("--template-canvas", template.canvas);
     previewCard.style.setProperty("--template-paper", template.paper);
+    previewCard.style.setProperty("--template-image", `url('${template.image || ""}')`);
   }
   updateQr(`https://yourdomain.com/invite/${slugify(title)}`);
 }
@@ -275,8 +295,18 @@ templateGrid.addEventListener("click", (event) => {
   if (!button) return;
   selectedInvitationTemplate = button.dataset.template || "ivory-garden";
   document.querySelector("#packageName").value = selectedInvitationTemplate;
+  const selected = invitationTemplates.find((template) => template.id === selectedInvitationTemplate);
+  const eventTypeByCategory = { Wedding: "Wedding Celebration", Baptism: "Baptism", "First Communion": "First Communion", Engagement: "Engagement", Birthday: "Birthday", Business: "Corporate Event", "Other Celebrations": "Other Celebration" };
+  if (selected && eventTypeByCategory[selected.category]) document.querySelector("#inviteEventType").value = eventTypeByCategory[selected.category];
   updatePreview();
   document.querySelector("#order").scrollIntoView({ behavior: "smooth" });
+});
+
+document.querySelector("#templateCategoryNav").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-storefront-category]");
+  if (!button) return;
+  activeStorefrontCategory = button.dataset.storefrontCategory;
+  renderTemplates();
 });
 
 orderForm.addEventListener("submit", async (event) => {

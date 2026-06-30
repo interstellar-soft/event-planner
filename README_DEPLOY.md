@@ -58,7 +58,7 @@ Render/Railway settings:
   - `BANK_PAYMENT_DETAILS=<bank name, account/IBAN, and recipient>`
   - `PORT` is usually provided by the host
 
-Clients choose from 18 ready-to-use invitation templates priced from $49 to $89, or the $149 Custom Atelier service. Template selection controls the complete invitation layout and price. AI cover and soundtrack controls are admin-only and appear for Custom Atelier invitations.
+Clients browse 21 high-quality ready-to-use invitation templates by occasion: Wedding, Baptism, First Communion, Engagement, Birthday, Business, and Other Celebrations. Ready designs are priced from $49 to $89, while the $149 Custom Atelier service keeps AI cover and soundtrack controls on the admin side.
 
 The admin AI controls remain disabled until their provider keys are configured. Cloudinary is strongly recommended in production so custom generated covers and soundtracks survive host restarts and redeployments. Without Cloudinary, generated files are stored temporarily in `generated/`.
 
