@@ -3,6 +3,7 @@ const studio = document.querySelector("#clientStudio");
 const loadError = document.querySelector("#clientLoadError");
 let clientState = null;
 const templateCategoryOrder = ["Wedding", "Baptism", "First Communion", "Engagement", "Birthday", "Business", "Other Celebrations", "Custom Design"];
+const eventTypeByCategory = { Wedding: "Wedding Celebration", Baptism: "Baptism", "First Communion": "First Communion", Engagement: "Engagement", Birthday: "Birthday", Business: "Corporate Event", "Other Celebrations": "Other Celebration" };
 let activeTemplateFilter = "";
 
 function escapeHtml(value) {
@@ -95,10 +96,14 @@ function renderClientState({ preserveFields = false } = {}) {
   rsvpToggle.checked = invitation.showRsvp !== false;
   rsvpToggle.disabled = !paid;
   document.querySelector("#customBriefField").hidden = invitation.templateId !== "custom-atelier";
-  document.querySelector("#clientPreviewLink").href = invitation.previewUrl;
   const publishButton = document.querySelector("#clientPublish");
   publishButton.disabled = !paid;
   publishButton.textContent = invitation.status === "published" ? "Republish Changes" : "Publish Invitation";
+  document.querySelector("#clientAccessNote").textContent = paid
+    ? "Your invitation is unlocked and ready to publish."
+    : status === "submitted"
+      ? "Payment is under review. This page updates automatically after Tony approves it."
+      : "Publishing unlocks after Tony approves your payment.";
   const liveLink = document.querySelector("#clientLiveLink");
   const qr = document.querySelector("#clientQr");
   liveLink.hidden = !invitation.publicUrl;
@@ -112,6 +117,7 @@ function renderClientState({ preserveFields = false } = {}) {
 
   renderTemplateCatalog();
   renderPaymentPanel();
+  renderRsvpDashboard();
 }
 
 function templateSample(template) {
@@ -180,12 +186,44 @@ function renderPaymentPanel() {
   const message = document.querySelector("#paymentMessage");
   form.hidden = payment.status === "submitted";
   if (payment.status === "submitted") {
-    message.textContent = `Payment submitted by ${payment.method === "bank" ? "bank transfer" : "Whish"}. Tony will verify reference ${payment.reference}.`;
+    message.textContent = `Payment submitted by ${payment.method === "bank" ? "bank transfer" : "Whish"}. Tony will verify reference ${payment.reference}. Checking automatically...`;
   } else if (payment.status === "rejected") {
     message.textContent = "The payment could not be verified. Check the reference and submit again.";
   } else {
     message.textContent = "";
   }
+}
+
+function renderRsvpDashboard() {
+  const dashboard = document.querySelector("#clientRsvpDashboard");
+  const paid = Boolean(clientState?.invitation?.paid);
+  dashboard.hidden = !paid;
+  if (!paid) return;
+
+  const rsvps = clientState.rsvps || [];
+  const query = document.querySelector("#rsvpSearch").value.trim().toLowerCase();
+  const visible = rsvps.filter((rsvp) => `${rsvp.name} ${rsvp.phone || ""}`.toLowerCase().includes(query));
+  document.querySelector("#rsvpResponseCount").textContent = rsvps.length;
+  document.querySelector("#rsvpAttendingCount").textContent = rsvps
+    .filter((rsvp) => rsvp.status === "attending")
+    .reduce((total, rsvp) => total + Number(rsvp.count || 0), 0);
+  document.querySelector("#rsvpDeclinedCount").textContent = rsvps.filter((rsvp) => rsvp.status === "not-attending").length;
+  document.querySelector("#clientRsvpList").innerHTML = visible.length ? visible.map((rsvp) => `
+    <article class="client-rsvp-row">
+      <div><strong>${escapeHtml(rsvp.name)}</strong><span>${escapeHtml(rsvp.phone || "No phone provided")}</span></div>
+      <span class="rsvp-status ${rsvp.status === "attending" ? "attending" : "declined"}">${rsvp.status === "attending" ? "Attending" : "Declined"}</span>
+      <b>${rsvp.status === "attending" ? `${Number(rsvp.count || 0)} guest${Number(rsvp.count || 0) === 1 ? "" : "s"}` : "-"}</b>
+      <time>${new Date(rsvp.createdAt).toLocaleString()}</time>
+    </article>
+  `).join("") : `<div class="rsvp-empty">${query ? "No guests match your search." : "No responses yet. Guest replies will appear here after you publish."}</div>`;
+}
+
+async function refreshClientData({ announce = false } = {}) {
+  const latest = await clientApi(apiPath());
+  const previousStatus = clientState ? paymentStatus(clientState.invitation) : "";
+  clientState = latest;
+  if (announce || paymentStatus(latest.invitation) !== previousStatus) renderClientState({ preserveFields: true });
+  else renderRsvpDashboard();
 }
 
 async function loadClientStudio() {
@@ -205,6 +243,17 @@ document.querySelector("#clientEditorForm").addEventListener("submit", async (ev
   await saveClientDetails();
 });
 
+document.querySelector("#clientPreviewLink").addEventListener("click", async () => {
+  const previewWindow = window.open("about:blank", "_blank");
+  const saved = await saveClientDetails("Details saved. Opening preview...");
+  if (!saved) {
+    previewWindow?.close();
+    return;
+  }
+  if (previewWindow) previewWindow.location.href = clientState.invitation.previewUrl;
+  else window.location.href = clientState.invitation.previewUrl;
+});
+
 document.querySelector("#clientTemplateFilter").addEventListener("click", (event) => {
   const button = event.target.closest("[data-template-filter]");
   if (!button) return;
@@ -216,6 +265,10 @@ document.querySelector("#clientTemplateGrid").addEventListener("click", async (e
   const button = event.target.closest("[data-select-template]");
   if (!button || clientState.invitation.paid || paymentStatus(clientState.invitation) === "submitted") return;
   const message = document.querySelector("#clientTemplateMessage");
+  const selectedTemplate = clientState.templates.find((template) => template.id === button.dataset.selectTemplate);
+  if (selectedTemplate && eventTypeByCategory[selectedTemplate.category]) {
+    document.querySelector("#clientEventType").value = eventTypeByCategory[selectedTemplate.category];
+  }
   message.textContent = "Applying template...";
   try {
     const result = await clientApi(apiPath(), {
@@ -264,5 +317,18 @@ document.querySelector("#clientPublish").addEventListener("click", async () => {
 });
 
 document.querySelector("#refreshClient").addEventListener("click", loadClientStudio);
+document.querySelector("#refreshRsvps").addEventListener("click", async () => {
+  try {
+    await refreshClientData({ announce: true });
+  } catch {}
+});
+document.querySelector("#rsvpSearch").addEventListener("input", renderRsvpDashboard);
 
 loadClientStudio();
+
+setInterval(async () => {
+  if (!clientState || (paymentStatus(clientState.invitation) !== "submitted" && !clientState.invitation.paid)) return;
+  try {
+    await refreshClientData();
+  } catch {}
+}, 10000);

@@ -11,6 +11,8 @@ const templateCategoryDescriptions = {
   "Other Celebrations": "Flexible premium designs for graduations, anniversaries, and private events.",
   "Custom Design": "A bespoke design, cover, and optional soundtrack prepared by Tony's studio."
 };
+const eventTypeByCategory = { Wedding: "Wedding Celebration", Baptism: "Baptism", "First Communion": "First Communion", Engagement: "Engagement", Birthday: "Birthday", Business: "Corporate Event", "Other Celebrations": "Other Celebration" };
+const studioStorageKey = "tony-private-invitation-studio";
 
 const templateGrid = document.querySelector("#templateGrid");
 const portfolioGrid = document.querySelector("#portfolioGrid");
@@ -177,14 +179,13 @@ function renderContactLinks() {
 }
 
 function updatePreview() {
-  const title = document.querySelector("#eventTitle").value.trim() || "Maya & Karim";
-  const date = document.querySelector("#eventDate").value.trim() || "Saturday, 18 July 2026 at 7:30 PM";
-  const venue = document.querySelector("#venue").value.trim() || "Sursock Palace Gardens, Beirut";
-  document.querySelector("#previewTitle").textContent = title;
-  document.querySelector("#previewDate").textContent = date;
-  document.querySelector("#previewVenue").textContent = venue;
   const selectedId = document.querySelector("#packageName")?.value || selectedInvitationTemplate;
   const template = invitationTemplates.find((item) => item.id === selectedId) || invitationTemplates[0];
+  const sample = templateSample(template);
+  document.querySelector("#previewTitle").textContent = document.querySelector("#eventTitle").value.trim() || sample.name;
+  document.querySelector("#previewDate").textContent = document.querySelector("#eventDate").value.trim() || sample.date;
+  document.querySelector("#previewVenue").textContent = document.querySelector("#venue").value.trim() || "Your venue";
+  document.querySelector("#storefrontInviteCard .invite-kicker").textContent = eventTypeByCategory[template.category] || "Event Invitation";
   const previewCard = document.querySelector("#storefrontInviteCard");
   if (template && previewCard) {
     previewCard.className = `invite-card template-preview-card invite-template-${template.id} invite-layout-${template.layout}`;
@@ -193,16 +194,17 @@ function updatePreview() {
     previewCard.style.setProperty("--template-paper", template.paper);
     previewCard.style.setProperty("--template-image", `url('${template.image || ""}')`);
   }
-  updateQr(`https://yourdomain.com/invite/${slugify(title)}`);
 }
 
-function slugify(value) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "event";
-}
-
-function updateQr(value) {
-  const qrImage = document.querySelector("#qrImage");
-  qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=132x132&data=${encodeURIComponent(value)}`;
+function showStudioRecovery(clientUrl, message = "Your invitation is already in progress") {
+  if (!clientUrl) return;
+  const absoluteUrl = new URL(clientUrl, window.location.origin).href;
+  const recovery = document.querySelector("#studioRecovery");
+  recovery.hidden = false;
+  recovery.querySelector("strong").textContent = message;
+  document.querySelector("#studioRecoveryLink").href = absoluteUrl;
+  document.querySelector("#clientStudioLink").href = absoluteUrl;
+  document.querySelector("#studioWhatsappLink").href = buildWhatsappUrl(`Hello ${content.studio.shortName}, please keep my private invitation studio link in this chat:\n${absoluteUrl}`);
 }
 
 function escapeHtml(value) {
@@ -288,18 +290,28 @@ Please confirm availability and pricing.`;
 
 renderBusinessContent();
 updatePreview();
+try {
+  showStudioRecovery(localStorage.getItem(studioStorageKey));
+} catch {}
 
 document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-plan]");
   if (!button) return;
   document.querySelector("#packageName").value = button.dataset.plan;
   selectedInvitationTemplate = button.dataset.plan;
+  const selected = invitationTemplates.find((template) => template.id === selectedInvitationTemplate);
+  if (selected && eventTypeByCategory[selected.category]) document.querySelector("#inviteEventType").value = eventTypeByCategory[selected.category];
+  updatePreview();
 });
 
 document.querySelector("#packageName").addEventListener("change", (event) => {
   selectedInvitationTemplate = event.target.value;
+  const selected = invitationTemplates.find((template) => template.id === selectedInvitationTemplate);
+  if (selected && eventTypeByCategory[selected.category]) document.querySelector("#inviteEventType").value = eventTypeByCategory[selected.category];
   updatePreview();
 });
+
+orderForm.addEventListener("input", updatePreview);
 
 document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-media-plan]");
@@ -313,7 +325,6 @@ templateGrid.addEventListener("click", (event) => {
   selectedInvitationTemplate = button.dataset.template || "ivory-garden";
   document.querySelector("#packageName").value = selectedInvitationTemplate;
   const selected = invitationTemplates.find((template) => template.id === selectedInvitationTemplate);
-  const eventTypeByCategory = { Wedding: "Wedding Celebration", Baptism: "Baptism", "First Communion": "First Communion", Engagement: "Engagement", Birthday: "Birthday", Business: "Corporate Event", "Other Celebrations": "Other Celebration" };
   if (selected && eventTypeByCategory[selected.category]) document.querySelector("#inviteEventType").value = eventTypeByCategory[selected.category];
   updatePreview();
   document.querySelector("#order").scrollIntoView({ behavior: "smooth" });
@@ -345,8 +356,11 @@ orderForm.addEventListener("submit", async (event) => {
       packageName: "Digital invitation template"
     });
     document.querySelector("#generatedInviteCard").hidden = false;
-    document.querySelector("#clientStudioLink").href = result.clientUrl;
-    status.textContent = result.message || "Request received. Tony will prepare your invitation preview.";
+    showStudioRecovery(result.clientUrl, "Request received. Your private studio is ready");
+    try {
+      localStorage.setItem(studioStorageKey, new URL(result.clientUrl, window.location.origin).href);
+    } catch {}
+    status.textContent = "Request received. Open your private studio to personalize and preview the invitation.";
   } catch (error) {
     status.textContent = error.message;
   }

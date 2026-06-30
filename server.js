@@ -233,8 +233,27 @@ function templateFor(id) {
   return templateById.get(String(id || "")) || templateById.get("ivory-garden");
 }
 
+function copyForTemplate(template) {
+  const copy = {
+    Wedding: { hostNames: "Together with their families", message: "We would be delighted to celebrate this special occasion with you." },
+    Engagement: { hostNames: "Together with their families", message: "Join us as we celebrate our engagement and the beginning of a beautiful new chapter." },
+    Baptism: { hostNames: "Together with the family", message: "Please join us for this joyful and blessed celebration of faith." },
+    "First Communion": { hostNames: "Together with the family", message: "Please join us in celebrating this special day of faith and blessing." },
+    Birthday: { hostNames: "With love from family and friends", message: "Come celebrate a wonderful day filled with joy, laughter, and good company." },
+    Business: { hostNames: "Hosted by our team", message: "We would be pleased to welcome you to this special event." },
+    "Other Celebrations": { hostNames: "Together with family and friends", message: "We would be delighted to share this special celebration with you." },
+    "Custom Design": { hostNames: "With joy", message: "You are warmly invited to celebrate this special occasion with us." }
+  };
+  return copy[template.category] || copy["Custom Design"];
+}
+
 function applyTemplate(invitation, templateId) {
+  const previousTemplate = templateFor(invitation.templateId);
+  const previousCopy = copyForTemplate(previousTemplate);
   const template = templateFor(templateId);
+  const nextCopy = copyForTemplate(template);
+  if (!invitation.hostNames || invitation.hostNames === previousCopy.hostNames) invitation.hostNames = nextCopy.hostNames;
+  if (!invitation.message || invitation.message === previousCopy.message) invitation.message = nextCopy.message;
   invitation.templateId = template.id;
   invitation.templateName = template.name;
   invitation.packageName = template.name;
@@ -611,6 +630,7 @@ async function handleApi(req, res, pathname) {
       const body = await readBody(req);
       const db = readDb();
       const selectedTemplate = templateFor(body.templateId);
+      const defaultCopy = copyForTemplate(selectedTemplate);
       const invitation = {
         id: createId("invite"),
         clientToken: crypto.randomBytes(24).toString("hex"),
@@ -631,8 +651,8 @@ async function handleApi(req, res, pathname) {
         coverDirection: "",
         musicDirection: "",
         customBrief: String(body.customBrief || "").trim(),
-        hostNames: "Together with their families",
-        message: "We would be delighted to celebrate this special occasion with you.",
+        hostNames: defaultCopy.hostNames,
+        message: defaultCopy.message,
         coverImageUrl: "",
         musicUrl: "",
         rsvpDeadline: "",
@@ -669,7 +689,8 @@ async function handleApi(req, res, pathname) {
       json(res, 200, {
         invitation: clientInvitation(invitation),
         templates: publicTemplates(),
-        paymentConfig: paymentConfig()
+        paymentConfig: paymentConfig(),
+        rsvps: isPaid(invitation) ? db.rsvps.filter((rsvp) => rsvp.invitationId === invitation.id) : []
       });
       return;
     }
@@ -865,13 +886,24 @@ async function handleApi(req, res, pathname) {
         json(res, 404, { error: "Invitation not found" });
         return;
       }
+      if (!isPaid(invite) || invite.status !== "published" || invite.showRsvp === false) {
+        json(res, 403, { error: "RSVP collection is not available for this invitation." });
+        return;
+      }
+      const guestName = String(body.name || "").trim();
+      if (guestName.length < 2 || guestName.length > 120) {
+        json(res, 400, { error: "Enter the guest's full name." });
+        return;
+      }
+      const status = body.status === "not-attending" ? "not-attending" : "attending";
+      const requestedCount = Number(body.count || 0);
       const rsvp = {
         id: createId("rsvp"),
         invitationId: invite.id,
-        name: String(body.name || "").trim(),
+        name: guestName,
         phone: String(body.phone || "").trim(),
-        count: Number(body.count || 0),
-        status: body.status === "not-attending" ? "not-attending" : "attending",
+        count: status === "attending" ? Math.min(20, Math.max(1, Number.isFinite(requestedCount) ? Math.round(requestedCount) : 1)) : 0,
+        status,
         createdAt: new Date().toISOString()
       };
       db.rsvps.unshift(rsvp);

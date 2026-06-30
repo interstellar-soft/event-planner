@@ -169,6 +169,11 @@
             <p class="kicker">Order builder</p>
             <h2>Request a digital invitation</h2>
           </div>
+          <div class="studio-recovery" id="studioRecovery" hidden>
+            <strong>Your invitation is already in progress</strong>
+            <span>This browser remembers your private studio link.</span>
+            <a class="button outline full" id="studioRecoveryLink" href="#">Continue your invitation</a>
+          </div>
           <label>
             Your name
             <input id="inviteClientName" name="inviteClientName" autocomplete="name" required />
@@ -179,11 +184,11 @@
           </label>
           <label>
             Event title
-            <input id="eventTitle" name="eventTitle" value="Maya & Karim" required />
+            <input id="eventTitle" name="eventTitle" placeholder="Names or celebration title" required />
           </label>
           <label>
             Date and time
-            <input id="eventDate" name="eventDate" value="Saturday, 18 July 2026 at 7:30 PM" required />
+            <input id="eventDate" name="eventDate" placeholder="Saturday, 18 July 2026 at 7:30 PM" required />
           </label>
           <label>
             Event type
@@ -199,7 +204,7 @@
           </label>
           <label>
             Venue
-            <input id="venue" name="venue" value="Sursock Palace Gardens, Beirut" required />
+            <input id="venue" name="venue" placeholder="Venue and city" required />
           </label>
           <label>
             Location link
@@ -210,10 +215,8 @@
             <select id="packageName" name="packageName"></select>
           </label>
           <fieldset>
-            <legend>Add-ons</legend>
-            <label class="check"><input type="checkbox" value="Bilingual Arabic / English" checked /> Bilingual</label>
-            <label class="check"><input type="checkbox" value="Guest name links" checked /> Guest links</label>
-            <label class="check"><input type="checkbox" value="Custom QR card" /> QR card</label>
+            <legend>Language request</legend>
+            <label class="check"><input type="checkbox" value="Bilingual Arabic / English" /> Arabic and English</label>
           </fieldset>
           <button class="button primary full" type="submit">Submit Invitation Request</button>
           <button class="button outline full" id="invitationWhatsApp" type="button">Request Invitation Quote</button>
@@ -227,15 +230,12 @@
             <h2 id="previewTitle">Maya & Karim</h2>
             <p id="previewDate">Saturday, 18 July 2026 at 7:30 PM</p>
             <p id="previewVenue">Sursock Palace Gardens, Beirut</p>
-            <a class="button invite-button" href="#booking">Request Quote</a>
+            <span class="button invite-button">RSVP</span>
           </div>
           <div class="qr-card" id="generatedInviteCard" hidden>
             <span>Request received</span>
             <a id="clientStudioLink" href="#">Open your private studio</a>
-          </div>
-          <div class="qr-card">
-            <img id="qrImage" alt="Invitation QR code" />
-            <span>Scan invitation</span>
+            <a id="studioWhatsappLink" href="#" target="_blank" rel="noopener noreferrer">Keep this link in WhatsApp</a>
           </div>
         </aside>
       </section>

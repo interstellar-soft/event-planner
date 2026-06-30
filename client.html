@@ -70,8 +70,9 @@
           <aside class="client-purchase-panel">
             <section class="client-preview-actions">
               <h2>Invitation preview</h2>
-              <a class="button outline full" id="clientPreviewLink" href="#" target="_blank" rel="noopener noreferrer">Open Preview</a>
-              <button class="button primary full" id="clientPublish" type="button">Publish Invitation</button>
+              <button class="button outline full" id="clientPreviewLink" type="button">Save &amp; Open Preview</button>
+              <button class="button primary full" id="clientPublish" type="button" aria-describedby="clientAccessNote">Publish Invitation</button>
+              <p class="client-access-note" id="clientAccessNote"></p>
               <a class="client-live-link" id="clientLiveLink" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
               <div class="client-qr" id="clientQr" hidden>
                 <img id="clientQrImage" alt="Guest invitation QR code" />
@@ -103,6 +104,24 @@
             </section>
           </aside>
         </div>
+
+        <section class="client-rsvp-dashboard" id="clientRsvpDashboard" hidden>
+          <div class="client-section-heading">
+            <div>
+              <p class="kicker">Guest responses</p>
+              <h2>RSVP dashboard</h2>
+            </div>
+            <button class="button small outline" id="refreshRsvps" type="button">Refresh</button>
+          </div>
+          <div class="rsvp-stat-grid">
+            <article><span id="rsvpResponseCount">0</span><small>Responses</small></article>
+            <article><span id="rsvpAttendingCount">0</span><small>Guests attending</small></article>
+            <article><span id="rsvpDeclinedCount">0</span><small>Declined</small></article>
+          </div>
+          <label class="rsvp-search">Search guests <input id="rsvpSearch" type="search" placeholder="Name or phone number" /></label>
+          <div class="client-rsvp-list" id="clientRsvpList"></div>
+          <p class="client-access-note">Responses update automatically while this page is open.</p>
+        </section>
       </section>
 
       <section class="client-load-error" id="clientLoadError" hidden>

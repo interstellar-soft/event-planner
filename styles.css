@@ -711,6 +711,24 @@ a {
   font-weight: 800;
 }
 
+.studio-recovery {
+  display: grid;
+  gap: 8px;
+  border-left: 4px solid var(--sage);
+  border-radius: 6px;
+  background: #eef7f3;
+  padding: 14px;
+}
+
+.studio-recovery[hidden] {
+  display: none;
+}
+
+.studio-recovery span {
+  color: var(--muted-ink);
+  font-size: 0.88rem;
+}
+
 .booking-section {
   align-items: stretch;
 }
@@ -845,6 +863,15 @@ textarea:focus {
 
 .qr-card span {
   color: var(--muted-ink);
+  font-weight: 850;
+}
+
+#generatedInviteCard {
+  grid-template-columns: 1fr;
+}
+
+#generatedInviteCard a {
+  color: var(--sage);
   font-weight: 850;
 }
 
@@ -1665,6 +1692,108 @@ textarea:focus {
   font-weight: 850;
 }
 
+.client-access-note {
+  min-height: 20px;
+  margin: -6px 0 0;
+  color: var(--muted-ink);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.client-rsvp-dashboard {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  padding: clamp(18px, 3vw, 28px);
+  box-shadow: 0 14px 38px rgba(24, 33, 38, 0.08);
+}
+
+.client-rsvp-dashboard[hidden] {
+  display: none;
+}
+
+.client-rsvp-dashboard h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.rsvp-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rsvp-stat-grid article {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f7faf8;
+  padding: 16px;
+}
+
+.rsvp-stat-grid span {
+  color: var(--ink);
+  font-size: 1.8rem;
+  font-weight: 950;
+}
+
+.rsvp-stat-grid small,
+.client-rsvp-row div span,
+.client-rsvp-row time {
+  color: var(--muted-ink);
+}
+
+.rsvp-search {
+  max-width: 420px;
+}
+
+.client-rsvp-list {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+
+.client-rsvp-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.4fr) 110px 90px minmax(150px, 0.8fr);
+  gap: 14px;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding: 14px 4px;
+}
+
+.client-rsvp-row div {
+  display: grid;
+  gap: 3px;
+}
+
+.client-rsvp-row time {
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+.rsvp-status {
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.rsvp-status.attending {
+  color: var(--sage);
+}
+
+.rsvp-status.declined {
+  color: #9a4b4b;
+}
+
+.rsvp-empty {
+  color: var(--muted-ink);
+  padding: 28px 8px;
+  text-align: center;
+}
+
 .client-qr {
   display: grid;
   justify-items: center;
@@ -1942,6 +2071,15 @@ textarea:focus {
   .invitation-row,
   .client-studio-layout {
     grid-template-columns: 1fr;
+  }
+
+  .rsvp-stat-grid,
+  .client-rsvp-row {
+    grid-template-columns: 1fr;
+  }
+
+  .client-rsvp-row time {
+    text-align: left;
   }
 
   .invitation-row .button {
