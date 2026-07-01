@@ -551,6 +551,7 @@ function invitePage(invite, { adminPreview = false, clientPreview = false, templ
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body class="invite-public-body invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)} ${videoUrl ? "has-invite-video" : ""}" style="${templateStyle}">
+    ${clientPreview ? `<a class="invite-back-to-studio" href="/studio/${escapeHtml(invite.clientToken)}">Back to studio</a>` : ""}
     ${hasEntrance ? `<div class="invite-entrance" id="inviteEntrance"><div><p>${escapeHtml(invite.eventType || "A special celebration")}</p><h1>${title}</h1><button class="button primary" id="enterInvitation" type="button">Open invitation</button></div></div>` : ""}
     <main class="invite-public-page">
       <section class="invite-hero">

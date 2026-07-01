@@ -244,14 +244,8 @@ document.querySelector("#clientEditorForm").addEventListener("submit", async (ev
 });
 
 document.querySelector("#clientPreviewLink").addEventListener("click", async () => {
-  const previewWindow = window.open("about:blank", "_blank");
   const saved = await saveClientDetails("Details saved. Opening preview...");
-  if (!saved) {
-    previewWindow?.close();
-    return;
-  }
-  if (previewWindow) previewWindow.location.href = clientState.invitation.previewUrl;
-  else window.location.href = clientState.invitation.previewUrl;
+  if (saved) window.location.href = clientState.invitation.previewUrl;
 });
 
 document.querySelector("#clientTemplateFilter").addEventListener("click", (event) => {
