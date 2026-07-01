@@ -37,6 +37,8 @@ const mimeTypes = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".webp": "image/webp",
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
   ".mp3": "audio/mpeg",
   ".txt": "text/plain; charset=utf-8",
   ".toml": "text/plain; charset=utf-8"
@@ -510,6 +512,12 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
   const rawCoverImageUrl = customCoverUrl || template.image;
   const coverImageUrl = safePublicUrl(rawCoverImageUrl, { allowLocal: true });
   const musicUrl = safePublicUrl(invite.musicUrl, { allowLocal: true });
+  const videoUrl = safePublicUrl(invite.videoUrl, { allowLocal: true });
+  const videoPosterUrl = safePublicUrl(invite.videoPosterUrl, { allowLocal: true }) || coverImageUrl;
+  const galleryUrls = (Array.isArray(invite.galleryUrls) ? invite.galleryUrls : []).map((url) => safePublicUrl(url, { allowLocal: true })).filter(Boolean);
+  const agenda = Array.isArray(invite.agenda) ? invite.agenda : [];
+  const locations = Array.isArray(invite.locations) ? invite.locations : [];
+  const hasEntrance = Boolean((videoUrl || musicUrl) && !locked);
   const hostNames = escapeHtml(invite.hostNames || "Together with their families");
   const message = escapeHtml(invite.message || "We would be delighted to celebrate this special occasion with you.");
   const templateStyle = [
@@ -518,6 +526,11 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
     `--template-paper:${template.paper}`,
     coverImageUrl ? `--invite-cover:url('${escapeHtml(coverImageUrl)}')` : ""
   ].filter(Boolean).join(";");
+  const agendaSection = agenda.length ? `<section class="invite-story-section invite-agenda"><p class="invite-section-kicker">The agenda</p><h2>Timing of the day</h2><div class="invite-agenda-list">${agenda.map((item) => `<div><time>${escapeHtml(item.time)}</time><span>${escapeHtml(item.label)}</span></div>`).join("")}</div></section>` : "";
+  const locationItems = locations.length ? locations : invite.venue ? [{ label: "Celebration", venue: invite.venue, time: invite.date, mapUrl: invite.mapUrl }] : [];
+  const locationsSection = locationItems.length ? `<section class="invite-story-section invite-locations"><p class="invite-section-kicker">Join us</p><h2>Locations</h2><div class="invite-location-grid">${locationItems.map((item) => { const map = safePublicUrl(item.mapUrl); return `<article><span>${escapeHtml(item.label || "Location")}</span><h3>${escapeHtml(item.venue || "")}</h3>${item.time ? `<p>${escapeHtml(item.time)}</p>` : ""}${map ? `<a class="button outline" href="${escapeHtml(map)}" target="_blank" rel="noopener noreferrer">Open map</a>` : ""}</article>`; }).join("")}</div></section>` : "";
+  const gallerySection = galleryUrls.length ? `<section class="invite-story-section invite-gallery"><p class="invite-section-kicker">Our moments</p><h2>Photo gallery</h2><div class="invite-gallery-grid">${galleryUrls.map((url, index) => `<img src="${escapeHtml(url)}" alt="Celebration photo ${index + 1}" loading="lazy" />`).join("")}</div></section>` : "";
+  const giftSection = invite.giftNote ? `<section class="invite-story-section invite-gifts"><p class="invite-section-kicker">With love</p><h2>Gifts</h2><p>${escapeHtml(invite.giftNote)}</p></section>` : "";
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -527,9 +540,12 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
     <title>${title} | Digital Invitation</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body class="invite-public-body invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)}" style="${templateStyle}">
+  <body class="invite-public-body invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)} ${videoUrl ? "has-invite-video" : ""}" style="${templateStyle}">
+    ${hasEntrance ? `<div class="invite-entrance" id="inviteEntrance"><div><p>${escapeHtml(invite.eventType || "A special celebration")}</p><h1>${title}</h1><button class="button primary" id="enterInvitation" type="button">Open invitation</button></div></div>` : ""}
     <main class="invite-public-page">
-      <section class="invite-public-card">
+      <section class="invite-hero">
+        ${videoUrl && !locked ? `<video class="invite-hero-video" id="inviteHeroVideo" muted loop playsinline preload="metadata" ${videoPosterUrl ? `poster="${escapeHtml(videoPosterUrl)}"` : ""}><source src="${escapeHtml(videoUrl)}" /></video>` : ""}
+        <div class="invite-public-card">
         ${isPreview ? `<div class="invite-preview-banner">${adminPreview ? "Private admin preview" : locked ? "Watermarked client preview" : "Client preview"}</div>` : ""}
         ${locked ? `<div class="invite-watermark" aria-hidden="true">PREVIEW</div>` : ""}
         <div class="invite-decoration" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -543,13 +559,19 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
             <p class="invite-date">${escapeHtml(invite.date)}</p>
             <p class="invite-venue">${escapeHtml(invite.venue)}</p>
           </div>
-          ${invite.mapUrl ? `<a class="button outline invite-location" href="${escapeHtml(invite.mapUrl)}" target="_blank" rel="noopener noreferrer">Open Location</a>` : ""}
-          ${musicUrl && !locked ? `<audio class="invite-audio" controls preload="none" src="${escapeHtml(musicUrl)}">Your browser does not support audio playback.</audio>` : ""}
+          ${musicUrl && !locked ? `<audio class="invite-audio" id="inviteAudio" controls preload="none" src="${escapeHtml(musicUrl)}">Your browser does not support audio playback.</audio>` : ""}
           ${invite.rsvpDeadline ? `<p class="invite-deadline">Kindly respond by ${escapeHtml(invite.rsvpDeadline)}</p>` : ""}
           ${locked ? `<a class="button primary full invite-unlock" href="/studio/${escapeHtml(invite.clientToken)}">Choose this template</a>` : ""}
         </div>
+        </div>
+      </section>
+      ${invite.eventDateTime ? `<section class="invite-story-section invite-countdown" data-event-date="${escapeHtml(invite.eventDateTime)}"><p class="invite-section-kicker">Save the date</p><h2>We cannot wait to celebrate</h2><div class="countdown-grid"><div><strong data-countdown="days">--</strong><span>Days</span></div><div><strong data-countdown="hours">--</strong><span>Hours</span></div><div><strong data-countdown="minutes">--</strong><span>Minutes</span></div><div><strong data-countdown="seconds">--</strong><span>Seconds</span></div></div></section>` : ""}
+      ${locationsSection}
+      ${agendaSection}
+      ${gallerySection}
+      ${giftSection}
         ${invite.showRsvp === false || locked ? "" : `
-        <form class="rsvp-form public-rsvp-form" id="publicRsvpForm">
+        <section class="invite-story-section invite-rsvp-section"><p class="invite-section-kicker">Be our guest</p><h2>Kindly confirm your attendance</h2><form class="rsvp-form public-rsvp-form" id="publicRsvpForm">
           <input type="hidden" id="inviteId" value="${escapeHtml(invite.id)}" />
           <label>Full name <input id="rsvpName" required /></label>
           <label>Phone <input id="rsvpPhone" type="tel" /></label>
@@ -562,11 +584,10 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
           </label>
           <button class="button primary full" type="submit">Send RSVP</button>
           <p class="form-note" id="rsvpStatusMessage" role="status"></p>
-        </form>
+        </form></section>
         `}
-      </section>
     </main>
-    ${invite.showRsvp === false || locked ? "" : `<script src="/invite.js"></script>`}
+    <script src="/invite.js"></script>
   </body>
 </html>`;
 }
@@ -655,6 +676,13 @@ async function handleApi(req, res, pathname) {
         message: defaultCopy.message,
         coverImageUrl: "",
         musicUrl: "",
+        videoUrl: "",
+        videoPosterUrl: "",
+        eventDateTime: "",
+        galleryUrls: [],
+        agenda: [],
+        locations: [],
+        giftNote: "",
         rsvpDeadline: "",
         showRsvp: true,
         generationUsage: { covers: 0, music: 0 },
@@ -836,12 +864,21 @@ async function handleApi(req, res, pathname) {
       const fields = [
         "title", "eventType", "date", "venue", "mapUrl", "packageName", "language",
         "clientName", "clientPhone", "hostNames", "message", "coverImageUrl", "musicUrl", "rsvpDeadline",
-        "coverDirection", "musicDirection"
+        "coverDirection", "musicDirection", "videoUrl", "videoPosterUrl", "eventDateTime", "giftNote"
       ];
       fields.forEach((field) => {
         if (Object.prototype.hasOwnProperty.call(body, field)) invitation[field] = String(body[field] || "").trim();
       });
       if (Object.prototype.hasOwnProperty.call(body, "templateId")) applyTemplate(invitation, body.templateId);
+      if (Object.prototype.hasOwnProperty.call(body, "galleryUrls")) {
+        invitation.galleryUrls = (Array.isArray(body.galleryUrls) ? body.galleryUrls : []).slice(0, 12).map((url) => safePublicUrl(url, { allowLocal: true })).filter(Boolean);
+      }
+      if (Object.prototype.hasOwnProperty.call(body, "agenda")) {
+        invitation.agenda = (Array.isArray(body.agenda) ? body.agenda : []).slice(0, 12).map((item) => ({ time: String(item?.time || "").trim().slice(0, 40), label: String(item?.label || "").trim().slice(0, 160) })).filter((item) => item.label);
+      }
+      if (Object.prototype.hasOwnProperty.call(body, "locations")) {
+        invitation.locations = (Array.isArray(body.locations) ? body.locations : []).slice(0, 6).map((item) => ({ label: String(item?.label || "").trim().slice(0, 80), venue: String(item?.venue || "").trim().slice(0, 160), time: String(item?.time || "").trim().slice(0, 60), mapUrl: safePublicUrl(item?.mapUrl) })).filter((item) => item.label || item.venue);
+      }
       if (Object.prototype.hasOwnProperty.call(body, "showRsvp")) invitation.showRsvp = Boolean(body.showRsvp);
       if (Object.prototype.hasOwnProperty.call(body, "status")) invitation.status = invitationStatus(body.status);
       invitation.updatedAt = new Date().toISOString();

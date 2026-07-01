@@ -60,6 +60,8 @@ Render/Railway settings:
 
 Clients browse 21 high-quality ready-to-use invitation templates by occasion: Wedding, Baptism, First Communion, Engagement, Birthday, Business, and Other Celebrations. Ready designs are priced from $49 to $89, while the $149 Custom Atelier service keeps AI cover and soundtrack controls on the admin side.
 
+Template tiers now describe the complete guest experience: Essential templates are image invitations, Signature templates support story sections, Premium templates support cinematic video experiences, and Custom Atelier remains bespoke. In the admin invitation editor, Tony can add a Cloudinary MP4/WebM URL and poster, a countdown date, gallery images, agenda items, multiple mapped locations, and an optional gift note. Video and music invitations use a tap-to-open entrance so mobile browsers can start media after the guest interacts.
+
 The admin AI controls remain disabled until their provider keys are configured. Cloudinary is strongly recommended in production so custom generated covers and soundtracks survive host restarts and redeployments. Without Cloudinary, generated files are stored temporarily in `generated/`.
 
 Client purchases currently use manual verification. A client selects a template, previews it with a watermark, and submits a Whish or bank transfer reference from the private studio. Tony previews the result and approves or rejects it from `/admin`. Approval unlocks RSVP controls and publishing. Template selection locks while payment is under review.

@@ -3,7 +3,7 @@
   if (typeof module !== "undefined" && module.exports) module.exports = templates;
   else root.invitationTemplates = templates;
 })(typeof globalThis !== "undefined" ? globalThis : this, function buildTemplates() {
-  return [
+  const templates = [
     { id: "ivory-garden", name: "Ivory Garden", category: "Wedding", price: 49, tier: "Essential", description: "Airy florals, classic serif type, and a graceful centered ceremony card.", accent: "#8a6846", canvas: "#f1ece4", paper: "#fffdf8", layout: "classic", image: "/assets/templates/ivory-garden.webp" },
     { id: "olive-press", name: "Olive Press", category: "Wedding", price: 49, tier: "Essential", description: "Mediterranean green, fine rules, and understated editorial typography.", accent: "#586747", canvas: "#dfe4d8", paper: "#fbfcf7", layout: "bordered", image: "/assets/templates/olive-press.webp" },
     { id: "blush-letter", name: "Blush Letter", category: "Engagement", price: 49, tier: "Essential", description: "A romantic letter-style invitation with blush paper and delicate details.", accent: "#a65f67", canvas: "#ead7d8", paper: "#fff8f7", layout: "letter", image: "/assets/templates/blush-letter.webp" },
@@ -31,4 +31,6 @@
 
     { id: "custom-atelier", name: "Custom Atelier", category: "Custom Design", price: 149, tier: "Bespoke", description: "A one-of-one art direction, cover, soundtrack, and layout prepared by Tony's studio.", accent: "#b78335", canvas: "#22282b", paper: "#f7f0e4", layout: "custom", custom: true }
   ];
+  const experienceByTier = { Essential: "Image", Signature: "Story", Premium: "Cinematic", Bespoke: "Bespoke" };
+  return templates.map((template) => ({ ...template, experience: experienceByTier[template.tier] || "Image" }));
 });

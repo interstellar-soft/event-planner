@@ -101,12 +101,19 @@ function openEditor(invitation) {
   document.querySelector("#editorVenue").value = invitation.venue || "";
   document.querySelector("#editorMapUrl").value = invitation.mapUrl || "";
   document.querySelector("#editorRsvpDeadline").value = invitation.rsvpDeadline || "";
+  document.querySelector("#editorEventDateTime").value = invitation.eventDateTime || "";
   document.querySelector("#editorHostNames").value = invitation.hostNames || "";
   const templateSelect = document.querySelector("#editorTemplate");
-  templateSelect.innerHTML = adminData.templates.map((template) => `<option value="${escapeHtml(template.id)}">${escapeHtml(template.name)} · $${template.price}</option>`).join("");
+  templateSelect.innerHTML = adminData.templates.map((template) => `<option value="${escapeHtml(template.id)}">${escapeHtml(template.name)} · ${escapeHtml(template.experience || "Image")} · $${template.price}</option>`).join("");
   templateSelect.value = invitation.templateId || "ivory-garden";
   renderCustomGenerationPanels();
   document.querySelector("#editorMessage").value = invitation.message || "";
+  document.querySelector("#editorVideoUrl").value = invitation.videoUrl || "";
+  document.querySelector("#editorVideoPosterUrl").value = invitation.videoPosterUrl || "";
+  document.querySelector("#editorGalleryUrls").value = (invitation.galleryUrls || []).join("\n");
+  document.querySelector("#editorAgenda").value = (invitation.agenda || []).map((item) => `${item.time || ""} | ${item.label || ""}`).join("\n");
+  document.querySelector("#editorLocations").value = (invitation.locations || []).map((item) => `${item.label || ""} | ${item.venue || ""} | ${item.time || ""} | ${item.mapUrl || ""}`).join("\n");
+  document.querySelector("#editorGiftNote").value = invitation.giftNote || "";
   document.querySelector("#editorCoverImage").value = invitation.coverImageUrl || "";
   document.querySelector("#editorMusicUrl").value = invitation.musicUrl || "";
   document.querySelector("#coverPrompt").value = invitation.generatedCovers?.[0]?.prompt || defaultCoverPrompt(invitation);
@@ -234,6 +241,7 @@ async function openPrivatePreview() {
 }
 
 function editorPayload(status) {
+  const lines = (selector) => document.querySelector(selector).value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   return {
     title: document.querySelector("#editorTitle").value,
     eventType: document.querySelector("#editorEventType").value,
@@ -241,11 +249,18 @@ function editorPayload(status) {
     venue: document.querySelector("#editorVenue").value,
     mapUrl: document.querySelector("#editorMapUrl").value,
     rsvpDeadline: document.querySelector("#editorRsvpDeadline").value,
+    eventDateTime: document.querySelector("#editorEventDateTime").value,
     hostNames: document.querySelector("#editorHostNames").value,
     templateId: document.querySelector("#editorTemplate").value,
     message: document.querySelector("#editorMessage").value,
     coverImageUrl: document.querySelector("#editorCoverImage").value,
     musicUrl: document.querySelector("#editorMusicUrl").value,
+    videoUrl: document.querySelector("#editorVideoUrl").value,
+    videoPosterUrl: document.querySelector("#editorVideoPosterUrl").value,
+    galleryUrls: lines("#editorGalleryUrls"),
+    agenda: lines("#editorAgenda").map((line) => { const [time, ...label] = line.split("|"); return { time: time.trim(), label: label.join("|").trim() }; }),
+    locations: lines("#editorLocations").map((line) => { const [label, venue, time, ...mapUrl] = line.split("|"); return { label: label?.trim(), venue: venue?.trim(), time: time?.trim(), mapUrl: mapUrl.join("|").trim() }; }),
+    giftNote: document.querySelector("#editorGiftNote").value,
     showRsvp: document.querySelector("#editorShowRsvp").checked,
     status
   };

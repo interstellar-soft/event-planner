@@ -2139,6 +2139,242 @@ textarea:focus {
   }
 }
 
+/* Cinematic invitation experience */
+.experience-editor {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f7faf8;
+  padding: 18px;
+}
+
+.experience-editor h3 {
+  margin: 0;
+}
+
+.invite-public-page {
+  display: block;
+  min-height: 100vh;
+  padding: 0;
+}
+
+.invite-hero {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 28px;
+  background: var(--invite-cover) center / cover;
+}
+
+.invite-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(12, 16, 18, 0.18), rgba(12, 16, 18, 0.58));
+}
+
+.invite-hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.invite-hero .invite-public-card {
+  z-index: 1;
+}
+
+.has-invite-video .invite-public-card {
+  background: color-mix(in srgb, var(--template-paper) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.invite-entrance {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(180deg, rgba(12, 16, 18, 0.2), rgba(12, 16, 18, 0.82)),
+    var(--invite-cover) center / cover;
+  color: #fff;
+  padding: 24px;
+  text-align: center;
+  transition: opacity 500ms ease, visibility 500ms ease;
+}
+
+.invite-entrance.opened {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.invite-entrance div {
+  width: min(540px, 100%);
+}
+
+.invite-entrance p {
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.invite-entrance h1 {
+  margin: 12px 0 26px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(3rem, 9vw, 6.5rem);
+  font-weight: 500;
+}
+
+.invite-story-section {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  padding: clamp(58px, 9vw, 100px) clamp(20px, 5vw, 60px);
+  color: var(--ink);
+  text-align: center;
+}
+
+.invite-story-section h2 {
+  margin: 6px 0 32px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  font-weight: 500;
+}
+
+.invite-section-kicker {
+  margin: 0;
+  color: var(--template-accent);
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.invite-countdown,
+.invite-agenda,
+.invite-gallery,
+.invite-gifts,
+.invite-rsvp-section {
+  background: color-mix(in srgb, var(--template-paper) 94%, white);
+}
+
+.countdown-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.countdown-grid div {
+  display: grid;
+  gap: 5px;
+  border-top: 1px solid var(--template-accent);
+  padding: 16px 4px;
+}
+
+.countdown-grid strong {
+  font-size: clamp(1.8rem, 5vw, 3.4rem);
+}
+
+.countdown-grid span {
+  color: var(--muted-ink);
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.invite-location-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.invite-location-grid article {
+  border: 1px solid color-mix(in srgb, var(--template-accent) 26%, transparent);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.invite-location-grid article > span {
+  color: var(--template-accent);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.invite-location-grid h3 {
+  margin: 10px 0 6px;
+}
+
+.invite-agenda-list {
+  width: min(620px, 100%);
+  margin: 0 auto;
+  text-align: left;
+}
+
+.invite-agenda-list div {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--template-accent) 22%, transparent);
+  padding: 15px 0;
+}
+
+.invite-agenda-list time {
+  color: var(--template-accent);
+  font-weight: 900;
+}
+
+.invite-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.invite-gallery-grid img {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  aspect-ratio: 4 / 5;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.invite-gifts p {
+  max-width: 620px;
+  margin: 0 auto;
+  white-space: pre-line;
+}
+
+.invite-rsvp-section .public-rsvp-form {
+  width: min(560px, 100%);
+  margin: 0 auto;
+  text-align: left;
+}
+
+@media (max-width: 620px) {
+  .invite-hero {
+    padding: 12px;
+  }
+
+  .countdown-grid {
+    gap: 4px;
+  }
+
+  .invite-gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .invite-gallery-grid img {
+    min-height: 170px;
+  }
+
+  .invite-agenda-list div {
+    grid-template-columns: 82px 1fr;
+    gap: 10px;
+  }
+}
+
 /* Complete invitation template system */
 .client-template-section {
   display: grid;

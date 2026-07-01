@@ -69,7 +69,7 @@ function renderTemplates() {
             <div><span>${escapeHtml(sample.kicker)}</span><strong>${escapeHtml(sample.name)}</strong><small>${escapeHtml(sample.date)}</small></div>
           </div>
           <footer>
-            <span class="template-tier">${escapeHtml(template.category)} · ${escapeHtml(template.tier)}</span>
+            <span class="template-tier">${escapeHtml(template.category)} · ${escapeHtml(template.tier)} · ${escapeHtml(template.experience || "Image")}</span>
             <h3>${template.name}</h3>
             <p>${template.description}</p>
             <p><strong>$${template.price}</strong></p>

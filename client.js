@@ -159,7 +159,7 @@ function renderTemplateCatalog() {
     return `<article class="client-template-card ${selected ? "selected" : ""} ${template.custom ? "custom" : ""}">
       ${templateMiniature(template)}
       <div class="client-template-meta">
-        <div><span>${escapeHtml(template.category)} · ${escapeHtml(template.tier)}</span><strong>${escapeHtml(template.name)}</strong></div>
+        <div><span>${escapeHtml(template.category)} · ${escapeHtml(template.tier)} · ${escapeHtml(template.experience || "Image")}</span><strong>${escapeHtml(template.name)}</strong></div>
         <b>$${template.price}</b>
       </div>
       <p>${escapeHtml(template.description)}</p>

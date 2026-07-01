@@ -1,7 +1,44 @@
 const form = document.querySelector("#publicRsvpForm");
 const statusMessage = document.querySelector("#rsvpStatusMessage");
 
-form.addEventListener("submit", async (event) => {
+document.querySelector("#enterInvitation")?.addEventListener("click", async () => {
+  const entrance = document.querySelector("#inviteEntrance");
+  const video = document.querySelector("#inviteHeroVideo");
+  const audio = document.querySelector("#inviteAudio");
+  entrance?.classList.add("opened");
+  document.body.classList.add("invitation-opened");
+  try {
+    if (video) {
+      video.muted = Boolean(audio);
+      await video.play();
+    }
+    if (audio) await audio.play();
+  } catch {}
+});
+
+const countdown = document.querySelector("[data-event-date]");
+if (countdown) {
+  const target = new Date(countdown.dataset.eventDate).getTime();
+  const updateCountdown = () => {
+    const remaining = Math.max(0, target - Date.now());
+    const values = {
+      days: Math.floor(remaining / 86400000),
+      hours: Math.floor((remaining % 86400000) / 3600000),
+      minutes: Math.floor((remaining % 3600000) / 60000),
+      seconds: Math.floor((remaining % 60000) / 1000)
+    };
+    Object.entries(values).forEach(([key, value]) => {
+      const element = countdown.querySelector(`[data-countdown="${key}"]`);
+      if (element) element.textContent = String(value).padStart(2, "0");
+    });
+  };
+  if (Number.isFinite(target)) {
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  }
+}
+
+form?.addEventListener("submit", async (event) => {
   event.preventDefault();
   statusMessage.textContent = "Sending RSVP...";
 
