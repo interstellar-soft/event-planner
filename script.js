@@ -21,8 +21,10 @@ const bundleGrid = document.querySelector("#bundleGrid");
 const invitationPricingGrid = document.querySelector("#invitationPricingGrid");
 const orderForm = document.querySelector("#orderForm");
 const mediaBookingForm = document.querySelector("#mediaBookingForm");
+const storefrontPreviewFrame = document.querySelector("#storefrontPreviewFrame");
 let selectedInvitationTemplate = "ivory-garden";
 let activeStorefrontCategory = "Wedding";
+let previewRefreshTimer = null;
 
 function getPathValue(source, path) {
   return path.split(".").reduce((value, key) => value?.[key], source);
@@ -182,18 +184,16 @@ function updatePreview() {
   const selectedId = document.querySelector("#packageName")?.value || selectedInvitationTemplate;
   const template = invitationTemplates.find((item) => item.id === selectedId) || invitationTemplates[0];
   const sample = templateSample(template);
-  document.querySelector("#previewTitle").textContent = document.querySelector("#eventTitle").value.trim() || sample.name;
-  document.querySelector("#previewDate").textContent = document.querySelector("#eventDate").value.trim() || sample.date;
-  document.querySelector("#previewVenue").textContent = document.querySelector("#venue").value.trim() || "Your venue";
-  document.querySelector("#storefrontInviteCard .invite-kicker").textContent = eventTypeByCategory[template.category] || "Event Invitation";
-  const previewCard = document.querySelector("#storefrontInviteCard");
-  if (template && previewCard) {
-    previewCard.className = `invite-card template-preview-card invite-template-${template.id} invite-layout-${template.layout}`;
-    previewCard.style.setProperty("--template-accent", template.accent);
-    previewCard.style.setProperty("--template-canvas", template.canvas);
-    previewCard.style.setProperty("--template-paper", template.paper);
-    previewCard.style.setProperty("--template-image", `url('${template.image || ""}')`);
-  }
+  const params = new URLSearchParams({
+    title: document.querySelector("#eventTitle").value.trim() || sample.name,
+    date: document.querySelector("#eventDate").value.trim() || sample.date,
+    venue: document.querySelector("#venue").value.trim() || "Your venue",
+    eventType: document.querySelector("#inviteEventType").value || eventTypeByCategory[template.category] || "Event Invitation"
+  });
+  window.clearTimeout(previewRefreshTimer);
+  previewRefreshTimer = window.setTimeout(() => {
+    storefrontPreviewFrame.src = `/template-preview/${encodeURIComponent(template.id)}?${params}`;
+  }, 250);
 }
 
 function showStudioRecovery(clientUrl, message = "Your invitation is already in progress") {

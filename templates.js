@@ -32,5 +32,19 @@
     { id: "custom-atelier", name: "Custom Atelier", category: "Custom Design", price: 149, tier: "Bespoke", description: "A one-of-one art direction, cover, soundtrack, and layout prepared by Tony's studio.", accent: "#b78335", canvas: "#22282b", paper: "#f7f0e4", layout: "custom", custom: true }
   ];
   const experienceByTier = { Essential: "Image", Signature: "Story", Premium: "Cinematic", Bespoke: "Bespoke" };
-  return templates.map((template) => ({ ...template, experience: experienceByTier[template.tier] || "Image" }));
+  const previewVideoByCategory = {
+    Wedding: "/assets/templates/videos/wedding.mp4",
+    Engagement: "/assets/templates/videos/engagement.mp4",
+    Baptism: "/assets/templates/videos/baptism.mp4",
+    "First Communion": "/assets/templates/videos/first-communion.mp4",
+    Birthday: "/assets/templates/videos/birthday.mp4",
+    Business: "/assets/templates/videos/business.mp4",
+    "Other Celebrations": "/assets/templates/videos/other-celebrations.mp4",
+    "Custom Design": "/assets/templates/videos/custom-design.mp4"
+  };
+  return templates.map((template) => ({
+    ...template,
+    experience: experienceByTier[template.tier] || "Image",
+    previewVideo: previewVideoByCategory[template.category] || previewVideoByCategory["Custom Design"]
+  }));
 });

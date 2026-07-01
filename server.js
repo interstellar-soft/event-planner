@@ -503,9 +503,9 @@ function serveFile(req, res) {
   });
 }
 
-function invitePage(invite, { adminPreview = false, clientPreview = false } = {}) {
+function invitePage(invite, { adminPreview = false, clientPreview = false, templateDemo = false } = {}) {
   const title = escapeHtml(invite.title);
-  const isPreview = adminPreview || clientPreview;
+  const isPreview = adminPreview || clientPreview || templateDemo;
   const locked = clientPreview && !isPaid(invite);
   const template = templateFor(invite.templateId);
   const customCoverUrl = locked && invite.coverImageUrl && invite.clientToken ? `/preview-cover/${encodeURIComponent(invite.clientToken)}` : invite.coverImageUrl;
@@ -556,7 +556,7 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
       <section class="invite-hero">
         ${videoUrl && !locked ? `<video class="invite-hero-video" id="inviteHeroVideo" muted loop playsinline preload="metadata" ${videoPosterUrl ? `poster="${escapeHtml(videoPosterUrl)}"` : ""}><source src="${escapeHtml(videoUrl)}" /></video>` : ""}
         <div class="invite-public-card">
-        ${isPreview ? `<div class="invite-preview-banner">${adminPreview ? "Private admin preview" : locked ? "Watermarked client preview" : "Client preview"}</div>` : ""}
+        ${isPreview && !templateDemo ? `<div class="invite-preview-banner">${adminPreview ? "Private admin preview" : locked ? "Watermarked client preview" : "Client preview"}</div>` : ""}
         ${locked ? `<div class="invite-watermark" aria-hidden="true">PREVIEW</div>` : ""}
         <div class="invite-decoration" aria-hidden="true"><span></span><span></span><span></span></div>
         <div class="invite-content">
@@ -579,7 +579,9 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
       ${agendaSection}
       ${gallerySection}
       ${giftSection}
-        ${invite.showRsvp === false || locked ? "" : `
+        ${invite.showRsvp === false || locked ? "" : templateDemo ? `
+        <section class="invite-story-section invite-rsvp-section"><p class="invite-section-kicker">Be our guest</p><h2>Kindly confirm your attendance</h2><div class="rsvp-form public-rsvp-form demo-rsvp-form"><label>Full name <input disabled placeholder="Guest name" /></label><label>Guests attending <input disabled value="1" /></label><button class="button primary full" type="button" disabled>Send RSVP</button></div></section>
+        ` : `
         <section class="invite-story-section invite-rsvp-section"><p class="invite-section-kicker">Be our guest</p><h2>Kindly confirm your attendance</h2><form class="rsvp-form public-rsvp-form" id="publicRsvpForm">
           <input type="hidden" id="inviteId" value="${escapeHtml(invite.id)}" />
           <label>Full name <input id="rsvpName" required /></label>
@@ -1004,6 +1006,29 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && pathname.startsWith("/preview-cover/")) {
     serveProtectedCover(res, decodeURIComponent(pathname.replace("/preview-cover/", "")));
+    return;
+  }
+
+  if (req.method === "GET" && pathname.startsWith("/template-preview/")) {
+    const template = templateFor(decodeURIComponent(pathname.replace("/template-preview/", "")));
+    const eventTypeByCategory = { Wedding: "Wedding Celebration", Baptism: "Baptism", "First Communion": "First Communion", Engagement: "Engagement", Birthday: "Birthday", Business: "Corporate Event", "Other Celebrations": "Other Celebration", "Custom Design": "Special Celebration" };
+    const defaultCopy = copyForTemplate(template);
+    const demoInvite = {
+      id: "template-demo",
+      title: String(url.searchParams.get("title") || (template.category === "Wedding" || template.category === "Engagement" ? "Maya & Karim" : template.category === "Baptism" ? "Elias" : template.category === "First Communion" ? "Maria" : "Your Celebration")).slice(0, 120),
+      eventType: String(url.searchParams.get("eventType") || eventTypeByCategory[template.category] || "Event Invitation").slice(0, 80),
+      date: String(url.searchParams.get("date") || "Saturday, 18 July 2026 at 7:30 PM").slice(0, 160),
+      venue: String(url.searchParams.get("venue") || "Your venue").slice(0, 160),
+      templateId: template.id,
+      hostNames: defaultCopy.hostNames,
+      message: defaultCopy.message,
+      videoUrl: template.previewVideo,
+      videoPosterUrl: template.image,
+      showRsvp: true,
+      status: "published",
+      payment: { status: "paid" }
+    };
+    send(res, 200, invitePage(demoInvite, { templateDemo: true }), { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
     return;
   }
 
