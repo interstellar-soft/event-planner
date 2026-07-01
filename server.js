@@ -514,9 +514,19 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
   const musicUrl = safePublicUrl(invite.musicUrl, { allowLocal: true });
   const videoUrl = safePublicUrl(invite.videoUrl, { allowLocal: true });
   const videoPosterUrl = safePublicUrl(invite.videoPosterUrl, { allowLocal: true }) || coverImageUrl;
-  const galleryUrls = (Array.isArray(invite.galleryUrls) ? invite.galleryUrls : []).map((url) => safePublicUrl(url, { allowLocal: true })).filter(Boolean);
-  const agenda = Array.isArray(invite.agenda) ? invite.agenda : [];
+  const savedGalleryUrls = (Array.isArray(invite.galleryUrls) ? invite.galleryUrls : []).map((url) => safePublicUrl(url, { allowLocal: true })).filter(Boolean);
+  const savedAgenda = Array.isArray(invite.agenda) ? invite.agenda : [];
   const locations = Array.isArray(invite.locations) ? invite.locations : [];
+  const showStoryDemo = isPreview && ["Story", "Cinematic", "Bespoke"].includes(template.experience);
+  const categoryImages = invitationTemplates.filter((item) => item.category === template.category && item.image).map((item) => item.image).slice(0, 3);
+  const galleryUrls = savedGalleryUrls.length ? savedGalleryUrls : showStoryDemo ? categoryImages : [];
+  const agenda = savedAgenda.length ? savedAgenda : showStoryDemo ? [
+    { time: "5:30 PM", label: "Guest arrival" },
+    { time: "6:00 PM", label: invite.eventType === "Baptism" || invite.eventType === "First Communion" ? "Church celebration" : "Ceremony" },
+    { time: "8:00 PM", label: "Dinner and celebration" }
+  ] : [];
+  const countdownDate = invite.eventDateTime || (showStoryDemo ? new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 16) : "");
+  const giftNote = invite.giftNote || (showStoryDemo ? "Your presence is the greatest gift. Any contribution details can be added here if the family wishes." : "");
   const hasEntrance = Boolean((videoUrl || musicUrl) && !locked);
   const hostNames = escapeHtml(invite.hostNames || "Together with their families");
   const message = escapeHtml(invite.message || "We would be delighted to celebrate this special occasion with you.");
@@ -530,7 +540,7 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
   const locationItems = locations.length ? locations : invite.venue ? [{ label: "Celebration", venue: invite.venue, time: invite.date, mapUrl: invite.mapUrl }] : [];
   const locationsSection = locationItems.length ? `<section class="invite-story-section invite-locations"><p class="invite-section-kicker">Join us</p><h2>Locations</h2><div class="invite-location-grid">${locationItems.map((item) => { const map = safePublicUrl(item.mapUrl); return `<article><span>${escapeHtml(item.label || "Location")}</span><h3>${escapeHtml(item.venue || "")}</h3>${item.time ? `<p>${escapeHtml(item.time)}</p>` : ""}${map ? `<a class="button outline" href="${escapeHtml(map)}" target="_blank" rel="noopener noreferrer">Open map</a>` : ""}</article>`; }).join("")}</div></section>` : "";
   const gallerySection = galleryUrls.length ? `<section class="invite-story-section invite-gallery"><p class="invite-section-kicker">Our moments</p><h2>Photo gallery</h2><div class="invite-gallery-grid">${galleryUrls.map((url, index) => `<img src="${escapeHtml(url)}" alt="Celebration photo ${index + 1}" loading="lazy" />`).join("")}</div></section>` : "";
-  const giftSection = invite.giftNote ? `<section class="invite-story-section invite-gifts"><p class="invite-section-kicker">With love</p><h2>Gifts</h2><p>${escapeHtml(invite.giftNote)}</p></section>` : "";
+  const giftSection = giftNote ? `<section class="invite-story-section invite-gifts"><p class="invite-section-kicker">With love</p><h2>Gifts</h2><p>${escapeHtml(giftNote)}</p></section>` : "";
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -550,7 +560,6 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
         ${locked ? `<div class="invite-watermark" aria-hidden="true">PREVIEW</div>` : ""}
         <div class="invite-decoration" aria-hidden="true"><span></span><span></span><span></span></div>
         <div class="invite-content">
-          <p class="invite-template-label">${escapeHtml(template.name)}</p>
           <p class="invite-kicker">${escapeHtml(invite.eventType || "Event Invitation")}</p>
           <p class="invite-hosts">${hostNames}</p>
           <h1>${title}</h1>
@@ -565,7 +574,7 @@ function invitePage(invite, { adminPreview = false, clientPreview = false } = {}
         </div>
         </div>
       </section>
-      ${invite.eventDateTime ? `<section class="invite-story-section invite-countdown" data-event-date="${escapeHtml(invite.eventDateTime)}"><p class="invite-section-kicker">Save the date</p><h2>We cannot wait to celebrate</h2><div class="countdown-grid"><div><strong data-countdown="days">--</strong><span>Days</span></div><div><strong data-countdown="hours">--</strong><span>Hours</span></div><div><strong data-countdown="minutes">--</strong><span>Minutes</span></div><div><strong data-countdown="seconds">--</strong><span>Seconds</span></div></div></section>` : ""}
+      ${countdownDate ? `<section class="invite-story-section invite-countdown" data-event-date="${escapeHtml(countdownDate)}">${showStoryDemo && !invite.eventDateTime ? `<p class="preview-sample-note">Sample preview content · Tony will replace this with your final details</p>` : ""}<p class="invite-section-kicker">Save the date</p><h2>We cannot wait to celebrate</h2><div class="countdown-grid"><div><strong data-countdown="days">--</strong><span>Days</span></div><div><strong data-countdown="hours">--</strong><span>Hours</span></div><div><strong data-countdown="minutes">--</strong><span>Minutes</span></div><div><strong data-countdown="seconds">--</strong><span>Seconds</span></div></div></section>` : ""}
       ${locationsSection}
       ${agendaSection}
       ${gallerySection}

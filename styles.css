@@ -2251,6 +2251,17 @@ textarea:focus {
   text-transform: uppercase;
 }
 
+.preview-sample-note {
+  width: fit-content;
+  margin: 0 auto 22px;
+  border: 1px solid color-mix(in srgb, var(--template-accent) 35%, transparent);
+  border-radius: 999px;
+  color: var(--muted-ink);
+  padding: 7px 11px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
 .invite-countdown,
 .invite-agenda,
 .invite-gallery,
@@ -2764,14 +2775,6 @@ textarea:focus {
 .invite-content {
   position: relative;
   z-index: 2;
-}
-
-.invite-template-label {
-  margin: 0 0 16px;
-  color: var(--template-accent);
-  font-size: 0.68rem;
-  font-weight: 900;
-  text-transform: uppercase;
 }
 
 .invite-decoration {
