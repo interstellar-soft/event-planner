@@ -16,6 +16,19 @@ document.querySelector("#enterInvitation")?.addEventListener("click", async () =
   } catch {}
 });
 
+document.querySelector("#inviteLanguageToggle")?.addEventListener("click", (event) => {
+  const button = event.currentTarget;
+  const showArabic = !document.body.classList.contains("language-ar");
+  document.body.classList.toggle("language-ar", showArabic);
+  document.documentElement.lang = showArabic ? "ar" : "en";
+  document.documentElement.dir = showArabic ? "rtl" : "ltr";
+  document.querySelectorAll("[data-language-panel]").forEach((panel) => {
+    panel.hidden = panel.dataset.languagePanel !== (showArabic ? "ar" : "en");
+  });
+  button.textContent = showArabic ? "EN" : "AR";
+  button.setAttribute("aria-label", showArabic ? "Show English version" : "عرض النسخة العربية");
+});
+
 const countdown = document.querySelector("[data-event-date]");
 if (countdown) {
   const target = new Date(countdown.dataset.eventDate).getTime();

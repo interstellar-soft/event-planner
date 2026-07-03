@@ -577,6 +577,7 @@ function invitePage(invite, { adminPreview = false, clientPreview = false, templ
   </head>
   <body class="invite-public-body invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)} ${videoUrl ? "has-invite-video" : ""}" style="${templateStyle}">
     ${clientPreview ? `<a class="invite-back-to-studio" href="/studio/${escapeHtml(invite.clientToken)}">Back to studio</a>` : ""}
+    ${bilingual ? `<button class="invite-language-toggle" id="inviteLanguageToggle" type="button" aria-label="عرض النسخة العربية">AR</button>` : ""}
     ${hasEntrance ? `<div class="invite-entrance" id="inviteEntrance"><div><p>${escapeHtml(invite.eventType || "A special celebration")}</p><h1>${title}</h1><button class="button primary" id="enterInvitation" type="button">Open invitation</button></div></div>` : ""}
     <main class="invite-public-page">
       <section class="invite-hero">
@@ -586,6 +587,7 @@ function invitePage(invite, { adminPreview = false, clientPreview = false, templ
         ${locked ? `<div class="invite-watermark" aria-hidden="true">PREVIEW</div>` : ""}
         <div class="invite-decoration" aria-hidden="true"><span></span><span></span><span></span></div>
         <div class="invite-content">
+          <section class="invite-language-panel invite-english" data-language-panel="en">
           <p class="invite-kicker">${escapeHtml(invite.eventType || "Event Invitation")}</p>
           <p class="invite-hosts">${hostNames}</p>
           <h1>${title}</h1>
@@ -594,7 +596,8 @@ function invitePage(invite, { adminPreview = false, clientPreview = false, templ
             <p class="invite-date">${escapeHtml(invite.date)}</p>
             <p class="invite-venue">${escapeHtml(invite.venue)}</p>
           </div>
-          ${bilingual ? `<div class="invite-language-divider"><span>English</span><span>العربية</span></div><section class="invite-arabic" lang="ar" dir="rtl"><p class="invite-kicker">${escapeHtml(arabicCopy.eventType)}</p><p class="invite-hosts">${hostNamesAr}</p><h2>${titleAr}</h2><p class="invite-message">${messageAr}</p><div class="invite-details"><p class="invite-date">${dateAr}</p><p class="invite-venue">${venueAr}</p></div></section>` : ""}
+          </section>
+          ${bilingual ? `<section class="invite-language-panel invite-arabic" data-language-panel="ar" lang="ar" dir="rtl" hidden><p class="invite-kicker">${escapeHtml(arabicCopy.eventType)}</p><p class="invite-hosts">${hostNamesAr}</p><h2>${titleAr}</h2><p class="invite-message">${messageAr}</p><div class="invite-details"><p class="invite-date">${dateAr}</p><p class="invite-venue">${venueAr}</p></div></section>` : ""}
           ${musicUrl && !locked ? `<audio class="invite-audio" id="inviteAudio" controls preload="none" src="${escapeHtml(musicUrl)}">Your browser does not support audio playback.</audio>` : ""}
           ${invite.rsvpDeadline ? `<p class="invite-deadline">Kindly respond by ${escapeHtml(invite.rsvpDeadline)}</p>` : ""}
           ${locked ? `<a class="button primary full invite-unlock" href="/studio/${escapeHtml(invite.clientToken)}">Choose this template</a>` : ""}
