@@ -2167,6 +2167,77 @@ textarea:focus {
   padding: 18px;
 }
 
+.bilingual-editor {
+  border: 1px solid color-mix(in srgb, var(--sage) 30%, var(--line));
+  border-radius: 8px;
+  background: #f4f9f7;
+  padding: 18px;
+}
+
+.client-language-notice {
+  display: grid;
+  gap: 5px;
+  border-left: 4px solid var(--sage);
+  border-radius: 6px;
+  background: #eaf6f1;
+  padding: 14px 16px;
+}
+
+.client-language-notice[hidden] {
+  display: none;
+}
+
+.client-language-notice span {
+  color: var(--muted-ink);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.bilingual-editor[hidden] {
+  display: none;
+}
+
+.bilingual-editor h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.invite-language-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 28px 0;
+  color: var(--template-accent);
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.invite-language-divider::before,
+.invite-language-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--template-accent) 30%, transparent);
+}
+
+.invite-arabic {
+  font-family: Tahoma, Arial, sans-serif;
+  text-align: center;
+}
+
+.invite-arabic h2 {
+  margin: 8px 0 12px;
+  font-family: Tahoma, Arial, sans-serif;
+  font-size: clamp(2.2rem, 9vw, 4.6rem);
+  font-weight: 500;
+}
+
+.invite-arabic .invite-message {
+  line-height: 2;
+}
+
 .experience-editor h3 {
   margin: 0;
 }

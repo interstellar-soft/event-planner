@@ -40,6 +40,11 @@ function clientEditorPayload() {
     rsvpDeadline: document.querySelector("#clientRsvpDeadline").value,
     hostNames: document.querySelector("#clientHostNames").value,
     message: document.querySelector("#clientMessage").value,
+    titleAr: document.querySelector("#clientTitleAr").value,
+    dateAr: document.querySelector("#clientDateAr").value,
+    venueAr: document.querySelector("#clientVenueAr").value,
+    hostNamesAr: document.querySelector("#clientHostNamesAr").value,
+    messageAr: document.querySelector("#clientMessageAr").value,
     customBrief: document.querySelector("#clientCustomBrief").value,
     showRsvp: document.querySelector("#clientShowRsvp").checked,
     templateId: clientState.invitation.templateId
@@ -89,6 +94,11 @@ function renderClientState({ preserveFields = false } = {}) {
     document.querySelector("#clientRsvpDeadline").value = invitation.rsvpDeadline || "";
     document.querySelector("#clientHostNames").value = invitation.hostNames || "";
     document.querySelector("#clientMessage").value = invitation.message || "";
+    document.querySelector("#clientTitleAr").value = invitation.titleAr || invitation.title || "";
+    document.querySelector("#clientDateAr").value = invitation.dateAr || invitation.date || "";
+    document.querySelector("#clientVenueAr").value = invitation.venueAr || invitation.venue || "";
+    document.querySelector("#clientHostNamesAr").value = invitation.hostNamesAr || "";
+    document.querySelector("#clientMessageAr").value = invitation.messageAr || "";
     document.querySelector("#clientCustomBrief").value = invitation.customBrief || "";
   }
 
@@ -96,6 +106,9 @@ function renderClientState({ preserveFields = false } = {}) {
   rsvpToggle.checked = invitation.showRsvp !== false;
   rsvpToggle.disabled = !paid;
   document.querySelector("#customBriefField").hidden = invitation.templateId !== "custom-atelier";
+  const bilingual = invitation.language === "Bilingual";
+  document.querySelector("#clientArabicFields").hidden = !bilingual;
+  document.querySelector("#clientLanguageNotice").hidden = !bilingual;
   const publishButton = document.querySelector("#clientPublish");
   publishButton.disabled = !paid;
   publishButton.textContent = invitation.status === "published" ? "Republish Changes" : "Publish Invitation";
@@ -115,7 +128,6 @@ function renderClientState({ preserveFields = false } = {}) {
     document.querySelector("#clientQrImage").src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(liveUrl)}`;
   }
 
-  renderTemplateCatalog();
   renderPaymentPanel();
   renderRsvpDashboard();
 }
@@ -246,35 +258,6 @@ document.querySelector("#clientEditorForm").addEventListener("submit", async (ev
 document.querySelector("#clientPreviewLink").addEventListener("click", async () => {
   const saved = await saveClientDetails("Details saved. Opening preview...");
   if (saved) window.location.href = clientState.invitation.previewUrl;
-});
-
-document.querySelector("#clientTemplateFilter").addEventListener("click", (event) => {
-  const button = event.target.closest("[data-template-filter]");
-  if (!button) return;
-  activeTemplateFilter = button.dataset.templateFilter;
-  renderTemplateCatalog();
-});
-
-document.querySelector("#clientTemplateGrid").addEventListener("click", async (event) => {
-  const button = event.target.closest("[data-select-template]");
-  if (!button || clientState.invitation.paid || paymentStatus(clientState.invitation) === "submitted") return;
-  const message = document.querySelector("#clientTemplateMessage");
-  const selectedTemplate = clientState.templates.find((template) => template.id === button.dataset.selectTemplate);
-  if (selectedTemplate && eventTypeByCategory[selectedTemplate.category]) {
-    document.querySelector("#clientEventType").value = eventTypeByCategory[selectedTemplate.category];
-  }
-  message.textContent = "Applying template...";
-  try {
-    const result = await clientApi(apiPath(), {
-      method: "PUT",
-      body: JSON.stringify({ ...clientEditorPayload(), templateId: button.dataset.selectTemplate })
-    });
-    clientState.invitation = result.invitation;
-    renderClientState({ preserveFields: true });
-    message.textContent = "Template selected. Open the preview to see the complete design.";
-  } catch (error) {
-    message.textContent = error.message;
-  }
 });
 
 document.querySelector("#paymentClaimForm").addEventListener("submit", async (event) => {

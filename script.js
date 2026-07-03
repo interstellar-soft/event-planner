@@ -188,7 +188,8 @@ function updatePreview() {
     title: document.querySelector("#eventTitle").value.trim() || sample.name,
     date: document.querySelector("#eventDate").value.trim() || sample.date,
     venue: document.querySelector("#venue").value.trim() || "Your venue",
-    eventType: document.querySelector("#inviteEventType").value || eventTypeByCategory[template.category] || "Event Invitation"
+    eventType: document.querySelector("#inviteEventType").value || eventTypeByCategory[template.category] || "Event Invitation",
+    language: getCheckedValues(orderForm).includes("Bilingual Arabic / English") ? "Bilingual" : "English"
   });
   window.clearTimeout(previewRefreshTimer);
   previewRefreshTimer = window.setTimeout(() => {

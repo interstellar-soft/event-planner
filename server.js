@@ -249,13 +249,31 @@ function copyForTemplate(template) {
   return copy[template.category] || copy["Custom Design"];
 }
 
+function arabicCopyForTemplate(template) {
+  const copy = {
+    Wedding: { eventType: "حفل زفاف", hostNames: "مع عائلتيهما", message: "يسعدنا أن تشاركونا الاحتفال بهذه المناسبة المميزة." },
+    Engagement: { eventType: "حفل خطوبة", hostNames: "مع عائلتيهما", message: "شاركونا فرحة خطوبتنا وبداية فصل جميل جديد." },
+    Baptism: { eventType: "سر العماد المقدس", hostNames: "مع العائلة", message: "ندعوكم لمشاركتنا هذا الاحتفال المبارك والمليء بالفرح." },
+    "First Communion": { eventType: "المناولة الأولى", hostNames: "مع العائلة", message: "شاركونا الاحتفال بهذا اليوم المبارك والمميز." },
+    Birthday: { eventType: "حفل عيد ميلاد", hostNames: "مع العائلة والأصدقاء", message: "شاركونا يوماً جميلاً مليئاً بالفرح والضحكات." },
+    Business: { eventType: "فعالية خاصة", hostNames: "بدعوة من فريقنا", message: "يسرّنا أن نرحب بكم في هذه المناسبة الخاصة." },
+    "Other Celebrations": { eventType: "مناسبة خاصة", hostNames: "مع العائلة والأصدقاء", message: "يسعدنا أن تشاركونا هذه المناسبة المميزة." },
+    "Custom Design": { eventType: "دعوة خاصة", hostNames: "بكل فرح", message: "نتشرف بدعوتكم لمشاركتنا هذه المناسبة الخاصة." }
+  };
+  return copy[template.category] || copy["Custom Design"];
+}
+
 function applyTemplate(invitation, templateId) {
   const previousTemplate = templateFor(invitation.templateId);
   const previousCopy = copyForTemplate(previousTemplate);
+  const previousArabicCopy = arabicCopyForTemplate(previousTemplate);
   const template = templateFor(templateId);
   const nextCopy = copyForTemplate(template);
+  const nextArabicCopy = arabicCopyForTemplate(template);
   if (!invitation.hostNames || invitation.hostNames === previousCopy.hostNames) invitation.hostNames = nextCopy.hostNames;
   if (!invitation.message || invitation.message === previousCopy.message) invitation.message = nextCopy.message;
+  if (!invitation.hostNamesAr || invitation.hostNamesAr === previousArabicCopy.hostNames) invitation.hostNamesAr = nextArabicCopy.hostNames;
+  if (!invitation.messageAr || invitation.messageAr === previousArabicCopy.message) invitation.messageAr = nextArabicCopy.message;
   invitation.templateId = template.id;
   invitation.templateName = template.name;
   invitation.packageName = template.name;
@@ -512,7 +530,7 @@ function invitePage(invite, { adminPreview = false, clientPreview = false, templ
   const rawCoverImageUrl = customCoverUrl || template.image;
   const coverImageUrl = safePublicUrl(rawCoverImageUrl, { allowLocal: true });
   const musicUrl = safePublicUrl(invite.musicUrl, { allowLocal: true });
-  const videoUrl = safePublicUrl(invite.videoUrl, { allowLocal: true });
+  const videoUrl = safePublicUrl(invite.videoUrl || template.previewVideo, { allowLocal: true });
   const videoPosterUrl = safePublicUrl(invite.videoPosterUrl, { allowLocal: true }) || coverImageUrl;
   const savedGalleryUrls = (Array.isArray(invite.galleryUrls) ? invite.galleryUrls : []).map((url) => safePublicUrl(url, { allowLocal: true })).filter(Boolean);
   const savedAgenda = Array.isArray(invite.agenda) ? invite.agenda : [];
@@ -527,9 +545,16 @@ function invitePage(invite, { adminPreview = false, clientPreview = false, templ
   ] : [];
   const countdownDate = invite.eventDateTime || (showStoryDemo ? new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 16) : "");
   const giftNote = invite.giftNote || (showStoryDemo ? "Your presence is the greatest gift. Any contribution details can be added here if the family wishes." : "");
-  const hasEntrance = Boolean((videoUrl || musicUrl) && !locked);
+  const hasEntrance = Boolean(videoUrl || (musicUrl && !locked));
   const hostNames = escapeHtml(invite.hostNames || "Together with their families");
   const message = escapeHtml(invite.message || "We would be delighted to celebrate this special occasion with you.");
+  const bilingual = invite.language === "Bilingual";
+  const arabicCopy = arabicCopyForTemplate(template);
+  const titleAr = escapeHtml(invite.titleAr || invite.title);
+  const dateAr = escapeHtml(invite.dateAr || invite.date);
+  const venueAr = escapeHtml(invite.venueAr || invite.venue);
+  const hostNamesAr = escapeHtml(invite.hostNamesAr || arabicCopy.hostNames);
+  const messageAr = escapeHtml(invite.messageAr || arabicCopy.message);
   const templateStyle = [
     `--template-accent:${template.accent}`,
     `--template-canvas:${template.canvas}`,
@@ -555,7 +580,7 @@ function invitePage(invite, { adminPreview = false, clientPreview = false, templ
     ${hasEntrance ? `<div class="invite-entrance" id="inviteEntrance"><div><p>${escapeHtml(invite.eventType || "A special celebration")}</p><h1>${title}</h1><button class="button primary" id="enterInvitation" type="button">Open invitation</button></div></div>` : ""}
     <main class="invite-public-page">
       <section class="invite-hero">
-        ${videoUrl && !locked ? `<video class="invite-hero-video" id="inviteHeroVideo" muted loop playsinline preload="metadata" ${videoPosterUrl ? `poster="${escapeHtml(videoPosterUrl)}"` : ""}><source src="${escapeHtml(videoUrl)}" /></video>` : ""}
+        ${videoUrl ? `<video class="invite-hero-video" id="inviteHeroVideo" muted loop playsinline preload="metadata" ${videoPosterUrl ? `poster="${escapeHtml(videoPosterUrl)}"` : ""}><source src="${escapeHtml(videoUrl)}" /></video>` : ""}
         <div class="invite-public-card">
         ${isPreview && !templateDemo ? `<div class="invite-preview-banner">${adminPreview ? "Private admin preview" : locked ? "Watermarked client preview" : "Client preview"}</div>` : ""}
         ${locked ? `<div class="invite-watermark" aria-hidden="true">PREVIEW</div>` : ""}
@@ -569,6 +594,7 @@ function invitePage(invite, { adminPreview = false, clientPreview = false, templ
             <p class="invite-date">${escapeHtml(invite.date)}</p>
             <p class="invite-venue">${escapeHtml(invite.venue)}</p>
           </div>
+          ${bilingual ? `<div class="invite-language-divider"><span>English</span><span>العربية</span></div><section class="invite-arabic" lang="ar" dir="rtl"><p class="invite-kicker">${escapeHtml(arabicCopy.eventType)}</p><p class="invite-hosts">${hostNamesAr}</p><h2>${titleAr}</h2><p class="invite-message">${messageAr}</p><div class="invite-details"><p class="invite-date">${dateAr}</p><p class="invite-venue">${venueAr}</p></div></section>` : ""}
           ${musicUrl && !locked ? `<audio class="invite-audio" id="inviteAudio" controls preload="none" src="${escapeHtml(musicUrl)}">Your browser does not support audio playback.</audio>` : ""}
           ${invite.rsvpDeadline ? `<p class="invite-deadline">Kindly respond by ${escapeHtml(invite.rsvpDeadline)}</p>` : ""}
           ${locked ? `<a class="button primary full invite-unlock" href="/studio/${escapeHtml(invite.clientToken)}">Choose this template</a>` : ""}
@@ -664,6 +690,7 @@ async function handleApi(req, res, pathname) {
       const db = readDb();
       const selectedTemplate = templateFor(body.templateId);
       const defaultCopy = copyForTemplate(selectedTemplate);
+      const defaultArabicCopy = arabicCopyForTemplate(selectedTemplate);
       const invitation = {
         id: createId("invite"),
         clientToken: crypto.randomBytes(24).toString("hex"),
@@ -686,6 +713,11 @@ async function handleApi(req, res, pathname) {
         customBrief: String(body.customBrief || "").trim(),
         hostNames: defaultCopy.hostNames,
         message: defaultCopy.message,
+        titleAr: String(body.titleAr || body.title || "").trim(),
+        dateAr: String(body.dateAr || body.date || "").trim(),
+        venueAr: String(body.venueAr || body.venue || "").trim(),
+        hostNamesAr: defaultArabicCopy.hostNames,
+        messageAr: defaultArabicCopy.message,
         coverImageUrl: "",
         musicUrl: "",
         videoUrl: "",
@@ -742,7 +774,7 @@ async function handleApi(req, res, pathname) {
       if (!invitation) throw providerError("Invitation studio not found.", 404);
       const fields = [
         "title", "eventType", "date", "venue", "mapUrl", "hostNames", "message",
-        "rsvpDeadline", "customBrief"
+        "rsvpDeadline", "customBrief", "titleAr", "dateAr", "venueAr", "hostNamesAr", "messageAr"
       ];
       fields.forEach((field) => {
         if (Object.prototype.hasOwnProperty.call(body, field)) invitation[field] = String(body[field] || "").trim();
@@ -876,7 +908,8 @@ async function handleApi(req, res, pathname) {
       const fields = [
         "title", "eventType", "date", "venue", "mapUrl", "packageName", "language",
         "clientName", "clientPhone", "hostNames", "message", "coverImageUrl", "musicUrl", "rsvpDeadline",
-        "coverDirection", "musicDirection", "videoUrl", "videoPosterUrl", "eventDateTime", "giftNote"
+        "coverDirection", "musicDirection", "videoUrl", "videoPosterUrl", "eventDateTime", "giftNote",
+        "titleAr", "dateAr", "venueAr", "hostNamesAr", "messageAr"
       ];
       fields.forEach((field) => {
         if (Object.prototype.hasOwnProperty.call(body, field)) invitation[field] = String(body[field] || "").trim();
@@ -1018,6 +1051,7 @@ const server = http.createServer((req, res) => {
       id: "template-demo",
       title: String(url.searchParams.get("title") || (template.category === "Wedding" || template.category === "Engagement" ? "Maya & Karim" : template.category === "Baptism" ? "Elias" : template.category === "First Communion" ? "Maria" : "Your Celebration")).slice(0, 120),
       eventType: String(url.searchParams.get("eventType") || eventTypeByCategory[template.category] || "Event Invitation").slice(0, 80),
+      language: url.searchParams.get("language") === "Bilingual" ? "Bilingual" : "English",
       date: String(url.searchParams.get("date") || "Saturday, 18 July 2026 at 7:30 PM").slice(0, 160),
       venue: String(url.searchParams.get("venue") || "Your venue").slice(0, 160),
       templateId: template.id,

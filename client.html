@@ -33,23 +33,14 @@
 
         <div class="client-studio-layout">
           <section class="client-workspace">
-            <section class="client-template-section" aria-labelledby="clientTemplateHeading">
-              <div class="client-section-heading">
-                <div>
-                  <p class="kicker">Invitation templates</p>
-                  <h2 id="clientTemplateHeading">Choose the complete design</h2>
-                </div>
-                <span class="selected-template-summary" id="selectedTemplateSummary"></span>
-              </div>
-              <div class="template-filter" id="clientTemplateFilter" aria-label="Filter invitation templates"></div>
-              <div class="client-template-grid" id="clientTemplateGrid"></div>
-              <p class="admin-alert" id="clientTemplateMessage" role="status"></p>
-            </section>
-
             <form class="client-editor-form" id="clientEditorForm">
               <div class="client-section-heading">
                 <h2>Invitation details</h2>
                 <button class="button small" type="submit">Save</button>
+              </div>
+              <div class="client-language-notice" id="clientLanguageNotice" hidden>
+                <strong>English + Arabic invitation</strong>
+                <span>Complete both sections below. The preview and published invitation display English first, followed by Arabic.</span>
               </div>
               <div class="editor-fields">
                 <label>Event title <input id="clientTitle" required /></label>
@@ -60,6 +51,16 @@
                 <label>RSVP deadline <input id="clientRsvpDeadline" /></label>
                 <label>Host line <input id="clientHostNames" /></label>
                 <label class="editor-wide">Invitation message <textarea id="clientMessage" rows="4"></textarea></label>
+                <section class="bilingual-editor editor-wide" id="clientArabicFields" hidden dir="rtl" lang="ar">
+                  <div class="client-section-heading"><h3>النسخة العربية</h3><span>Arabic version shown after English</span></div>
+                  <div class="editor-fields">
+                    <label>عنوان المناسبة <input id="clientTitleAr" /></label>
+                    <label>التاريخ والوقت <input id="clientDateAr" /></label>
+                    <label>المكان <input id="clientVenueAr" /></label>
+                    <label>سطر الدعوة <input id="clientHostNamesAr" /></label>
+                    <label class="editor-wide">نص الدعوة <textarea id="clientMessageAr" rows="4"></textarea></label>
+                  </div>
+                </section>
                 <label class="editor-wide" id="customBriefField" hidden>Custom design brief <textarea id="clientCustomBrief" rows="5" maxlength="1200" placeholder="Describe the colors, visual references, atmosphere, and music direction you want Tony's studio to create."></textarea></label>
                 <label class="check editor-wide"><input id="clientShowRsvp" type="checkbox" /> Collect guest RSVPs</label>
               </div>

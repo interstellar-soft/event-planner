@@ -108,6 +108,11 @@ function openEditor(invitation) {
   templateSelect.value = invitation.templateId || "ivory-garden";
   renderCustomGenerationPanels();
   document.querySelector("#editorMessage").value = invitation.message || "";
+  document.querySelector("#editorTitleAr").value = invitation.titleAr || invitation.title || "";
+  document.querySelector("#editorDateAr").value = invitation.dateAr || invitation.date || "";
+  document.querySelector("#editorVenueAr").value = invitation.venueAr || invitation.venue || "";
+  document.querySelector("#editorHostNamesAr").value = invitation.hostNamesAr || "";
+  document.querySelector("#editorMessageAr").value = invitation.messageAr || "";
   document.querySelector("#editorVideoUrl").value = invitation.videoUrl || "";
   document.querySelector("#editorVideoPosterUrl").value = invitation.videoPosterUrl || "";
   document.querySelector("#editorGalleryUrls").value = (invitation.galleryUrls || []).join("\n");
@@ -253,6 +258,11 @@ function editorPayload(status) {
     hostNames: document.querySelector("#editorHostNames").value,
     templateId: document.querySelector("#editorTemplate").value,
     message: document.querySelector("#editorMessage").value,
+    titleAr: document.querySelector("#editorTitleAr").value,
+    dateAr: document.querySelector("#editorDateAr").value,
+    venueAr: document.querySelector("#editorVenueAr").value,
+    hostNamesAr: document.querySelector("#editorHostNamesAr").value,
+    messageAr: document.querySelector("#editorMessageAr").value,
     coverImageUrl: document.querySelector("#editorCoverImage").value,
     musicUrl: document.querySelector("#editorMusicUrl").value,
     videoUrl: document.querySelector("#editorVideoUrl").value,
