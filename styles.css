@@ -2240,7 +2240,7 @@ textarea:focus {
 .invite-envelope-stage {
   display: grid;
   justify-items: center;
-  width: min(580px, 94vw) !important;
+  width: min(580px, 100%) !important;
   margin-inline: auto;
   box-sizing: border-box;
   padding-inline: 16px;
@@ -2413,7 +2413,6 @@ textarea:focus {
   .invite-template-cathedral-gold .invite-public-card,
   .invite-template-disco-bloom .invite-public-card { padding-inline: 26px; }
   .invite-template-disco-bloom .invite-public-card { box-shadow: 8px 8px 0 rgba(60,29,77,.78); transform: none; }
-  .invite-envelope-stage { width: 94vw !important; }
   .invite-envelope-letter { padding: 18px; }
 }
 
