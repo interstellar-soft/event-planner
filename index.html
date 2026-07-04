@@ -186,10 +186,10 @@
             Event title
             <input id="eventTitle" name="eventTitle" placeholder="Names or celebration title" required />
           </label>
-          <label>
-            Date and time
-            <input id="eventDate" name="eventDate" placeholder="Saturday, 18 July 2026 at 7:30 PM" required />
-          </label>
+          <div class="form-field-pair">
+            <label>Event date <input id="eventDate" name="eventDate" type="date" required /></label>
+            <label>Event time <input id="eventTime" name="eventTime" type="time" required /></label>
+          </div>
           <label>
             Event type
             <select id="inviteEventType" name="inviteEventType">

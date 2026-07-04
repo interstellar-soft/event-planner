@@ -158,6 +158,41 @@ function readBody(req) {
   });
 }
 
+function readBinaryBody(req, maxBytes) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let size = 0;
+    req.on("data", (chunk) => {
+      size += chunk.length;
+      if (size > maxBytes) {
+        reject(providerError("File is larger than the allowed upload size.", 413));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
+}
+
+function eventTiming(eventDate, eventTime) {
+  const date = String(eventDate || "").trim();
+  const time = String(eventTime || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) return null;
+  const parsed = new Date(`${date}T${time}:00`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return {
+    eventDate: date,
+    eventTime: time,
+    eventDateTime: `${date}T${time}`,
+    date: new Intl.DateTimeFormat("en-US", {
+      weekday: "long", year: "numeric", month: "long", day: "numeric",
+      hour: "numeric", minute: "2-digit"
+    }).format(parsed)
+  };
+}
+
 function safeSlug(value) {
   const base = String(value || "event")
     .toLowerCase()
@@ -395,7 +430,7 @@ async function uploadToCloudinary(buffer, mimeType, invitation, kind) {
   form.append("folder", folder);
   form.append("public_id", publicId);
   form.append("signature", signature);
-  const resourceType = kind === "music" ? "video" : "image";
+  const resourceType = ["music", "video"].includes(kind) ? "video" : "image";
   const response = await fetchWithTimeout(
     `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudinaryConfig.cloudName)}/${resourceType}/upload`,
     { method: "POST", body: form },
@@ -649,6 +684,7 @@ function clientStudioPage() {
 
 async function handleApi(req, res, pathname) {
   try {
+    const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     if (req.method === "POST" && pathname === "/api/login") {
       const body = await readBody(req);
       if (body.password !== adminPassword) {
@@ -694,13 +730,16 @@ async function handleApi(req, res, pathname) {
       const selectedTemplate = templateFor(body.templateId);
       const defaultCopy = copyForTemplate(selectedTemplate);
       const defaultArabicCopy = arabicCopyForTemplate(selectedTemplate);
+      const timing = eventTiming(body.eventDate, body.eventTime);
       const invitation = {
         id: createId("invite"),
         clientToken: crypto.randomBytes(24).toString("hex"),
         slug: uniqueSlug(db, body.title),
         title: String(body.title || "Untitled Event").trim(),
         eventType: String(body.eventType || "Wedding Celebration").trim(),
-        date: String(body.date || "").trim(),
+        date: timing?.date || String(body.date || "").trim(),
+        eventDate: timing?.eventDate || "",
+        eventTime: timing?.eventTime || "",
         venue: String(body.venue || "").trim(),
         mapUrl: String(body.mapUrl || "").trim(),
         templateId: selectedTemplate.id,
@@ -725,7 +764,7 @@ async function handleApi(req, res, pathname) {
         musicUrl: "",
         videoUrl: "",
         videoPosterUrl: "",
-        eventDateTime: "",
+        eventDateTime: timing?.eventDateTime || "",
         galleryUrls: [],
         agenda: [],
         locations: [],
@@ -782,12 +821,61 @@ async function handleApi(req, res, pathname) {
       fields.forEach((field) => {
         if (Object.prototype.hasOwnProperty.call(body, field)) invitation[field] = String(body[field] || "").trim();
       });
+      if (Object.prototype.hasOwnProperty.call(body, "eventDate") || Object.prototype.hasOwnProperty.call(body, "eventTime")) {
+        const timing = eventTiming(body.eventDate, body.eventTime);
+        if (!timing) throw providerError("Choose a valid event date and time.", 400);
+        Object.assign(invitation, timing);
+      }
       if (!isPaid(invitation) && invitation.payment?.status !== "submitted" && Object.prototype.hasOwnProperty.call(body, "templateId")) {
         applyTemplate(invitation, body.templateId);
       }
       if (isPaid(invitation) && Object.prototype.hasOwnProperty.call(body, "showRsvp")) {
         invitation.showRsvp = Boolean(body.showRsvp);
       }
+      invitation.updatedAt = new Date().toISOString();
+      writeDb(db);
+      json(res, 200, { invitation: clientInvitation(invitation) });
+      return;
+    }
+
+    const clientMediaMatch = pathname.match(/^\/api\/client\/invitations\/([^/]+)\/media$/);
+    if (req.method === "POST" && clientMediaMatch) {
+      const db = readDb();
+      const invitation = findInvitationByClientToken(db, decodeURIComponent(clientMediaMatch[1]));
+      if (!invitation) throw providerError("Invitation studio not found.", 404);
+      const slot = String(requestUrl.searchParams.get("slot") || "");
+      const rules = {
+        video: { types: ["video/mp4", "video/webm"], max: 40 * 1024 * 1024, extensions: { "video/mp4": "mp4", "video/webm": "webm" } },
+        poster: { types: ["image/jpeg", "image/png", "image/webp"], max: 8 * 1024 * 1024, extensions: { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } },
+        gallery: { types: ["image/jpeg", "image/png", "image/webp"], max: 8 * 1024 * 1024, extensions: { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } }
+      };
+      const rule = rules[slot];
+      if (!rule) throw providerError("Unknown media placement.", 400);
+      const mimeType = String(req.headers["content-type"] || "").split(";")[0].toLowerCase();
+      if (!rule.types.includes(mimeType)) throw providerError("This file format is not supported for that placement.", 415);
+      if (slot === "gallery" && (invitation.galleryUrls || []).length >= 8) throw providerError("The gallery can contain up to 8 photos.", 409);
+      const buffer = await readBinaryBody(req, rule.max);
+      if (!buffer.length) throw providerError("Choose a file to upload.", 400);
+      const assetUrl = await persistGeneratedAsset(buffer, rule.extensions[mimeType], mimeType, invitation, slot === "video" ? "video" : slot);
+      if (slot === "video") invitation.videoUrl = assetUrl;
+      if (slot === "poster") invitation.videoPosterUrl = assetUrl;
+      if (slot === "gallery") invitation.galleryUrls = [...(invitation.galleryUrls || []), assetUrl].slice(0, 8);
+      invitation.updatedAt = new Date().toISOString();
+      writeDb(db);
+      json(res, 201, { invitation: clientInvitation(invitation), assetUrl });
+      return;
+    }
+
+    if (req.method === "DELETE" && clientMediaMatch) {
+      const db = readDb();
+      const invitation = findInvitationByClientToken(db, decodeURIComponent(clientMediaMatch[1]));
+      if (!invitation) throw providerError("Invitation studio not found.", 404);
+      const slot = String(requestUrl.searchParams.get("slot") || "");
+      const assetUrl = String(requestUrl.searchParams.get("url") || "");
+      if (slot === "video") invitation.videoUrl = "";
+      else if (slot === "poster") invitation.videoPosterUrl = "";
+      else if (slot === "gallery") invitation.galleryUrls = (invitation.galleryUrls || []).filter((item) => item !== assetUrl);
+      else throw providerError("Unknown media placement.", 400);
       invitation.updatedAt = new Date().toISOString();
       writeDb(db);
       json(res, 200, { invitation: clientInvitation(invitation) });
@@ -822,15 +910,7 @@ async function handleApi(req, res, pathname) {
 
     const clientPublishMatch = pathname.match(/^\/api\/client\/invitations\/([^/]+)\/publish$/);
     if (req.method === "POST" && clientPublishMatch) {
-      const db = readDb();
-      const invitation = findInvitationByClientToken(db, decodeURIComponent(clientPublishMatch[1]));
-      if (!invitation) throw providerError("Invitation studio not found.", 404);
-      if (!isPaid(invitation)) throw providerError("Purchase approval is required before publishing.", 402);
-      invitation.status = "published";
-      invitation.publishedAt = invitation.publishedAt || new Date().toISOString();
-      invitation.updatedAt = new Date().toISOString();
-      writeDb(db);
-      json(res, 200, { invitation: clientInvitation(invitation) });
+      json(res, 403, { error: "Tony's studio publishes the invitation after payment and final approval." });
       return;
     }
 
@@ -928,7 +1008,11 @@ async function handleApi(req, res, pathname) {
         invitation.locations = (Array.isArray(body.locations) ? body.locations : []).slice(0, 6).map((item) => ({ label: String(item?.label || "").trim().slice(0, 80), venue: String(item?.venue || "").trim().slice(0, 160), time: String(item?.time || "").trim().slice(0, 60), mapUrl: safePublicUrl(item?.mapUrl) })).filter((item) => item.label || item.venue);
       }
       if (Object.prototype.hasOwnProperty.call(body, "showRsvp")) invitation.showRsvp = Boolean(body.showRsvp);
-      if (Object.prototype.hasOwnProperty.call(body, "status")) invitation.status = invitationStatus(body.status);
+      if (Object.prototype.hasOwnProperty.call(body, "status")) {
+        const nextStatus = invitationStatus(body.status);
+        if (nextStatus === "published" && !isPaid(invitation)) throw providerError("Mark the payment as paid before publishing.", 409);
+        invitation.status = nextStatus;
+      }
       invitation.updatedAt = new Date().toISOString();
       if (invitation.status === "published" && !invitation.publishedAt) invitation.publishedAt = invitation.updatedAt;
       writeDb(db);

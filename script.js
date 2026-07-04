@@ -184,9 +184,12 @@ function updatePreview() {
   const selectedId = document.querySelector("#packageName")?.value || selectedInvitationTemplate;
   const template = invitationTemplates.find((item) => item.id === selectedId) || invitationTemplates[0];
   const sample = templateSample(template);
+  const eventDate = document.querySelector("#eventDate").value;
+  const eventTime = document.querySelector("#eventTime").value;
+  const formattedDate = eventDate && eventTime ? new Date(`${eventDate}T${eventTime}`).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" }) : sample.date;
   const params = new URLSearchParams({
     title: document.querySelector("#eventTitle").value.trim() || sample.name,
-    date: document.querySelector("#eventDate").value.trim() || sample.date,
+    date: formattedDate,
     venue: document.querySelector("#venue").value.trim() || "Your venue",
     eventType: document.querySelector("#inviteEventType").value || eventTypeByCategory[template.category] || "Event Invitation",
     language: getCheckedValues(orderForm).includes("Bilingual Arabic / English") ? "Bilingual" : "English"
@@ -347,7 +350,8 @@ orderForm.addEventListener("submit", async (event) => {
     const result = await postJson("/api/invitations", {
       title: document.querySelector("#eventTitle").value,
       eventType: document.querySelector("#inviteEventType").value,
-      date: document.querySelector("#eventDate").value,
+      eventDate: document.querySelector("#eventDate").value,
+      eventTime: document.querySelector("#eventTime").value,
       venue: document.querySelector("#venue").value,
       mapUrl: document.querySelector("#mapUrl").value,
       templateId: document.querySelector("#packageName").value,

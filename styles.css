@@ -1674,6 +1674,7 @@ textarea:focus {
 }
 
 .client-editor-form,
+.client-media-studio,
 .client-generator-section,
 .client-preview-actions,
 .client-payment {
@@ -1684,13 +1685,37 @@ textarea:focus {
   box-shadow: 0 14px 38px rgba(24, 33, 38, 0.08);
 }
 
+.form-field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.media-upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.media-upload-card { border: 1px solid #d9dfdc; padding: 18px; background: #fff; }
+.media-upload-wide { grid-column: 1 / -1; }
+.media-upload-card h3 { margin: 6px 0; }
+.media-upload-card p { margin: 0 0 6px; }
+.media-upload-card small { display: block; color: #64706d; margin-bottom: 14px; }
+.media-upload-card input[type="file"] { width: 100%; margin-bottom: 10px; }
+.media-placement { color: #287a68; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.media-result, .client-gallery-results { margin-top: 12px; }
+.client-gallery-results { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.uploaded-media { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: #eef1ef; }
+.uploaded-media img, .uploaded-media video { width: 100%; height: 100%; object-fit: cover; }
+.uploaded-media .icon-button { position: absolute; top: 6px; right: 6px; background: #fff; }
+@media (max-width: 720px) { .form-field-pair, .media-upload-grid { grid-template-columns: 1fr; } .media-upload-wide { grid-column: auto; } .client-gallery-results { grid-template-columns: repeat(2, 1fr); } }
+
 .client-editor-form,
+.client-media-studio,
 .client-generator-section,
 .client-preview-actions,
 .client-payment {
   display: grid;
   gap: 16px;
 }
+
+.admin-review-only .editor-fields { display: none; }
+.admin-invitation-review { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 16px; border: 1px solid var(--line); background: #f7f9f8; }
+.admin-invitation-review div { display: grid; gap: 3px; }
+.admin-invitation-review span { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+.admin-invitation-review strong { overflow-wrap: anywhere; }
+@media (max-width: 720px) { .admin-invitation-review { grid-template-columns: 1fr; } }
 
 .client-section-heading h2,
 .client-preview-actions h2,

@@ -34,7 +34,8 @@ function clientEditorPayload() {
   return {
     title: document.querySelector("#clientTitle").value,
     eventType: document.querySelector("#clientEventType").value,
-    date: document.querySelector("#clientDate").value,
+    eventDate: document.querySelector("#clientEventDate").value,
+    eventTime: document.querySelector("#clientEventTime").value,
     venue: document.querySelector("#clientVenue").value,
     mapUrl: document.querySelector("#clientMapUrl").value,
     rsvpDeadline: document.querySelector("#clientRsvpDeadline").value,
@@ -88,7 +89,8 @@ function renderClientState({ preserveFields = false } = {}) {
   if (!preserveFields) {
     document.querySelector("#clientTitle").value = invitation.title || "";
     document.querySelector("#clientEventType").value = invitation.eventType || "";
-    document.querySelector("#clientDate").value = invitation.date || "";
+    document.querySelector("#clientEventDate").value = invitation.eventDate || invitation.eventDateTime?.slice(0, 10) || "";
+    document.querySelector("#clientEventTime").value = invitation.eventTime || invitation.eventDateTime?.slice(11, 16) || "";
     document.querySelector("#clientVenue").value = invitation.venue || "";
     document.querySelector("#clientMapUrl").value = invitation.mapUrl || "";
     document.querySelector("#clientRsvpDeadline").value = invitation.rsvpDeadline || "";
@@ -110,10 +112,11 @@ function renderClientState({ preserveFields = false } = {}) {
   document.querySelector("#clientArabicFields").hidden = !bilingual;
   document.querySelector("#clientLanguageNotice").hidden = !bilingual;
   const publishButton = document.querySelector("#clientPublish");
-  publishButton.disabled = !paid;
+  publishButton.hidden = true;
+  publishButton.disabled = true;
   publishButton.textContent = invitation.status === "published" ? "Republish Changes" : "Publish Invitation";
   document.querySelector("#clientAccessNote").textContent = paid
-    ? "Your invitation is unlocked and ready to publish."
+    ? invitation.status === "published" ? "Tony published your invitation. Your guest link is ready below." : "Payment approved. Tony will publish the invitation after the final review."
     : status === "submitted"
       ? "Payment is under review. This page updates automatically after Tony approves it."
       : "Publishing unlocks after Tony approves your payment.";
@@ -129,7 +132,56 @@ function renderClientState({ preserveFields = false } = {}) {
   }
 
   renderPaymentPanel();
+  renderClientMedia();
   renderRsvpDashboard();
+}
+
+function mediaPreview(url, type, slot) {
+  if (!url) return "";
+  const media = type === "video" ? `<video src="${escapeHtml(url)}" muted controls playsinline></video>` : `<img src="${escapeHtml(url)}" alt="Uploaded invitation media" />`;
+  return `<div class="uploaded-media">${media}<button class="icon-button" type="button" data-remove-media="${slot}" data-media-url="${escapeHtml(url)}" aria-label="Remove media" title="Remove">&times;</button></div>`;
+}
+
+function renderClientMedia() {
+  const invitation = clientState.invitation;
+  document.querySelector("#clientVideoResult").innerHTML = mediaPreview(invitation.videoUrl, "video", "video");
+  document.querySelector("#clientPosterResult").innerHTML = mediaPreview(invitation.videoPosterUrl, "image", "poster");
+  document.querySelector("#clientGalleryResults").innerHTML = (invitation.galleryUrls || []).map((url) => mediaPreview(url, "image", "gallery")).join("");
+}
+
+async function uploadMedia(slot) {
+  const input = document.querySelector(slot === "video" ? "#clientVideoFile" : slot === "poster" ? "#clientPosterFile" : "#clientGalleryFile");
+  const files = [...input.files];
+  const message = document.querySelector("#clientMediaMessage");
+  if (!files.length) { message.textContent = "Choose a file first."; return; }
+  if (slot !== "gallery" && files.length > 1) files.splice(1);
+  message.textContent = `Uploading ${files.length} file${files.length === 1 ? "" : "s"}...`;
+  try {
+    for (const file of files) {
+      const response = await fetch(`${apiPath("/media")}?slot=${encodeURIComponent(slot)}`, {
+        method: "POST",
+        headers: { "Content-Type": file.type, "X-File-Name": encodeURIComponent(file.name) },
+        body: file
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Upload failed.");
+      clientState.invitation = result.invitation;
+    }
+    input.value = "";
+    renderClientMedia();
+    message.textContent = "Media uploaded. Open the preview to see its exact placement.";
+  } catch (error) { message.textContent = error.message; }
+}
+
+async function removeMedia(slot, url) {
+  const message = document.querySelector("#clientMediaMessage");
+  message.textContent = "Removing media...";
+  try {
+    const result = await clientApi(`${apiPath("/media")}?slot=${encodeURIComponent(slot)}&url=${encodeURIComponent(url)}`, { method: "DELETE" });
+    clientState.invitation = result.invitation;
+    renderClientMedia();
+    message.textContent = "Media removed.";
+  } catch (error) { message.textContent = error.message; }
 }
 
 function templateSample(template) {
@@ -255,6 +307,12 @@ document.querySelector("#clientEditorForm").addEventListener("submit", async (ev
   await saveClientDetails();
 });
 
+document.querySelectorAll("[data-upload-media]").forEach((button) => button.addEventListener("click", () => uploadMedia(button.dataset.uploadMedia)));
+document.querySelector(".client-media-studio").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-remove-media]");
+  if (button) removeMedia(button.dataset.removeMedia, button.dataset.mediaUrl);
+});
+
 document.querySelector("#clientPreviewLink").addEventListener("click", async () => {
   const saved = await saveClientDetails("Details saved. Opening preview...");
   if (saved) window.location.href = clientState.invitation.previewUrl;
@@ -274,20 +332,6 @@ document.querySelector("#paymentClaimForm").addEventListener("submit", async (ev
     });
     clientState.invitation = result.invitation;
     renderClientState({ preserveFields: true });
-  } catch (error) {
-    message.textContent = error.message;
-  }
-});
-
-document.querySelector("#clientPublish").addEventListener("click", async () => {
-  const message = document.querySelector("#clientPublishMessage");
-  if (!(await saveClientDetails("Details saved."))) return;
-  message.textContent = "Publishing invitation...";
-  try {
-    const result = await clientApi(apiPath("/publish"), { method: "POST", body: "{}" });
-    clientState.invitation = result.invitation;
-    renderClientState({ preserveFields: true });
-    message.textContent = "Invitation published. Your guest link is ready.";
   } catch (error) {
     message.textContent = error.message;
   }

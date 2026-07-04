@@ -65,7 +65,7 @@ function renderAdmin() {
           <p>${rsvps.length} RSVP response${rsvps.length === 1 ? "" : "s"}</p>
           ${status === "published" ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>` : `<span class="draft-note">Not visible to guests</span>`}
         </div>
-        <button class="button small" data-edit-invitation="${escapeHtml(invitation.id)}" type="button">Edit</button>
+        <button class="button small" data-edit-invitation="${escapeHtml(invitation.id)}" type="button">Review</button>
       </article>`;
     }).join("") || `<article class="admin-list-card"><strong>No invitation requests yet</strong><p>New client requests will appear here as drafts.</p></article>`;
 
@@ -94,6 +94,13 @@ function openEditor(invitation) {
   document.querySelector("#editorInviteId").value = invitation.id;
   document.querySelector("#editorHeading").textContent = invitation.title || "Edit invitation";
   document.querySelector("#editorClientSummary").innerHTML = `<strong>${escapeHtml(invitation.clientName || "Client")}</strong><span>${escapeHtml(invitation.clientPhone || "No WhatsApp number")}</span><span>${escapeHtml(invitation.packageName || "No package selected")}</span><a href="/studio/${escapeHtml(invitation.clientToken)}" target="_blank" rel="noopener noreferrer">Open client studio</a>`;
+  document.querySelector("#adminInvitationReview").innerHTML = `
+    <div><span>Event</span><strong>${escapeHtml(invitation.title || "Untitled")} · ${escapeHtml(invitation.eventType || "")}</strong></div>
+    <div><span>Date and time</span><strong>${escapeHtml(invitation.date || "Not chosen")}</strong></div>
+    <div><span>Venue</span><strong>${escapeHtml(invitation.venue || "Not provided")}</strong></div>
+    <div><span>Language</span><strong>${escapeHtml(invitation.language || "English")}</strong></div>
+    <div><span>Media</span><strong>${invitation.videoUrl ? "Hero video · " : ""}${invitation.videoPosterUrl ? "Poster · " : ""}${(invitation.galleryUrls || []).length} gallery photo(s)</strong></div>
+    <div><span>Workflow</span><strong>Review payment, preview, approve, then publish</strong></div>`;
   renderAdminPayment(invitation);
   document.querySelector("#editorTitle").value = invitation.title || "";
   document.querySelector("#editorEventType").value = invitation.eventType || "";

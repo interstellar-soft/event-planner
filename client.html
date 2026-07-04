@@ -45,7 +45,8 @@
               <div class="editor-fields">
                 <label>Event title <input id="clientTitle" required /></label>
                 <label>Event type <input id="clientEventType" required /></label>
-                <label>Date and time <input id="clientDate" required /></label>
+                <label>Event date <input id="clientEventDate" type="date" required /></label>
+                <label>Event time <input id="clientEventTime" type="time" required /></label>
                 <label>Venue <input id="clientVenue" required /></label>
                 <label>Google Maps link <input id="clientMapUrl" type="url" /></label>
                 <label>RSVP deadline <input id="clientRsvpDeadline" /></label>
@@ -66,13 +67,49 @@
               </div>
               <p class="admin-alert" id="clientEditorMessage" role="status"></p>
             </form>
+
+            <section class="client-media-studio">
+              <div class="client-section-heading">
+                <div><p class="kicker">Your media</p><h2>Build the invitation story</h2></div>
+              </div>
+              <div class="media-upload-grid">
+                <article class="media-upload-card">
+                  <span class="media-placement">Opening screen</span>
+                  <h3>Hero video</h3>
+                  <p>Plays behind the invitation opening. Use a 5-30 second portrait video (9:16 recommended).</p>
+                  <small>MP4 or WebM · maximum 40 MB · muted autoplay</small>
+                  <input id="clientVideoFile" type="file" accept="video/mp4,video/webm" />
+                  <button class="button outline full" data-upload-media="video" type="button">Upload video</button>
+                  <div class="media-result" id="clientVideoResult"></div>
+                </article>
+                <article class="media-upload-card">
+                  <span class="media-placement">Opening fallback</span>
+                  <h3>Video poster</h3>
+                  <p>Shown while the video loads, and on devices where video cannot start automatically.</p>
+                  <small>JPG, PNG, or WebP · maximum 8 MB · portrait 1080 × 1920 recommended</small>
+                  <input id="clientPosterFile" type="file" accept="image/jpeg,image/png,image/webp" />
+                  <button class="button outline full" data-upload-media="poster" type="button">Upload poster</button>
+                  <div class="media-result" id="clientPosterResult"></div>
+                </article>
+                <article class="media-upload-card media-upload-wide">
+                  <span class="media-placement">Below event details</span>
+                  <h3>Photo gallery</h3>
+                  <p>Appears in the “Our moments” section guests scroll through after the countdown.</p>
+                  <small>Up to 8 photos · JPG, PNG, or WebP · maximum 8 MB each · 4:5 portrait recommended</small>
+                  <input id="clientGalleryFile" type="file" accept="image/jpeg,image/png,image/webp" multiple />
+                  <button class="button outline" data-upload-media="gallery" type="button">Upload selected photos</button>
+                  <div class="client-gallery-results" id="clientGalleryResults"></div>
+                </article>
+              </div>
+              <p class="admin-alert" id="clientMediaMessage" role="status"></p>
+            </section>
           </section>
 
           <aside class="client-purchase-panel">
             <section class="client-preview-actions">
               <h2>Invitation preview</h2>
               <button class="button outline full" id="clientPreviewLink" type="button">Save &amp; Open Preview</button>
-              <button class="button primary full" id="clientPublish" type="button" aria-describedby="clientAccessNote">Publish Invitation</button>
+              <button class="button primary full" id="clientPublish" type="button" aria-describedby="clientAccessNote" hidden>Publish Invitation</button>
               <p class="client-access-note" id="clientAccessNote"></p>
               <a class="client-live-link" id="clientLiveLink" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
               <div class="client-qr" id="clientQr" hidden>
@@ -88,7 +125,7 @@
               <div class="client-unlock-list">
                 <span>Your selected complete design</span>
                 <span>Personalized event details and guest experience</span>
-                <span>Publishing, QR sharing, and RSVP</span>
+                <span>Tony's approval, publishing, QR sharing, and RSVP</span>
               </div>
               <div class="payment-methods" id="paymentMethods"></div>
               <form class="admin-form" id="paymentClaimForm">
