@@ -2050,7 +2050,12 @@ textarea:focus {
     grid-column: 1 / -1;
     justify-content: flex-start;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
   }
+
+  .nav-links::-webkit-scrollbar { display: none; }
+  .nav-links a { flex: 0 0 auto; white-space: nowrap; }
 
   .section.split,
   .section.two-column,
