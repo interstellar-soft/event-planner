@@ -1714,7 +1714,9 @@ textarea:focus {
   box-shadow: 0 14px 38px rgba(24, 33, 38, 0.08);
 }
 
-.form-field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-field-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-width: 0; }
+.form-field-pair > label { min-width: 0; }
+.form-field-pair input { display: block; min-width: 0; max-width: 100%; inline-size: 100%; }
 .media-upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .media-upload-card { border: 1px solid #d9dfdc; padding: 18px; background: #fff; }
 .media-upload-wide { grid-column: 1 / -1; }
