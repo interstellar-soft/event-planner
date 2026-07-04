@@ -1,13 +1,15 @@
 const form = document.querySelector("#publicRsvpForm");
 const statusMessage = document.querySelector("#rsvpStatusMessage");
 
-document.querySelector("#enterInvitation")?.addEventListener("click", async () => {
+document.querySelector("#enterInvitation")?.addEventListener("click", async (event) => {
   const entrance = document.querySelector("#inviteEntrance");
   const video = document.querySelector("#inviteHeroVideo");
   const audio = document.querySelector("#inviteAudio");
-  entrance?.classList.add("opened");
+  event.currentTarget.disabled = true;
+  entrance?.classList.add("opening");
   document.body.classList.add("invitation-opened");
-  window.setTimeout(() => entrance?.setAttribute("hidden", ""), 900);
+  window.setTimeout(() => entrance?.classList.add("opened"), 1250);
+  window.setTimeout(() => entrance?.setAttribute("hidden", ""), 1900);
   try {
     if (video) {
       video.muted = Boolean(audio);
