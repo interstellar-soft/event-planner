@@ -232,6 +232,35 @@ a {
   color: rgba(255, 255, 255, 0.72);
 }
 
+.invitation-features {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.65fr) minmax(0, 1.35fr);
+  gap: clamp(32px, 6vw, 84px);
+  align-items: start;
+  background: var(--ink);
+  color: var(--white);
+}
+
+.invitation-features > div:first-child { position: sticky; top: 120px; }
+.invitation-features p { color: rgba(255,255,255,0.72); }
+.feature-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: rgba(255,255,255,0.14); }
+.feature-list article { min-height: 190px; padding: 24px; background: var(--ink); }
+.feature-list strong { color: #9ed6c8; font-size: 0.76rem; }
+.feature-list h3 { margin: 28px 0 8px; font-size: 1.08rem; }
+.feature-list p { margin: 0; font-size: 0.92rem; }
+
+.invitation-process { background: #f2f7f5; }
+.process-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-top: 32px; background: #cfdad6; }
+.process-grid article { min-height: 220px; padding: 26px; background: #f2f7f5; }
+.process-grid span { display: block; color: var(--sage); font-size: 0.78rem; font-weight: 800; }
+.process-grid h3 { margin: 54px 0 10px; }
+.process-grid p { margin: 0; }
+
+.photography-upsell { display: grid; grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 72px); align-items: center; }
+.photography-upsell img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.photography-upsell h2 { max-width: 660px; }
+.photography-upsell p { max-width: 680px; }
+
 .conversion-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2041,6 +2070,10 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
+  .invitation-features, .photography-upsell { grid-template-columns: 1fr; }
+  .invitation-features > div:first-child { position: static; }
+  .process-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
   .conversion-strip {
     align-items: flex-start;
     flex-direction: column;
@@ -2078,6 +2111,10 @@ textarea:focus {
     gap: 2px;
     font-size: 0.84rem;
   }
+
+  .feature-list, .process-grid { grid-template-columns: 1fr; }
+  .feature-list article, .process-grid article { min-height: 0; }
+  .process-grid h3 { margin-top: 28px; }
 
   .hero {
     min-height: 680px;

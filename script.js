@@ -413,7 +413,7 @@ document.querySelector("#mediaWhatsApp").addEventListener("click", () => {
   });
 });
 
-document.querySelector("#heroWhatsApp").addEventListener("click", () => {
+document.querySelector("#heroWhatsApp")?.addEventListener("click", () => {
   openWhatsapp(
     `Hello ${content.studio.shortName}, I want to ask about full event packages with invitations, RSVP, photography, and gallery delivery.`,
     document.querySelector("#contactStatus"),
@@ -424,6 +424,14 @@ document.querySelector("#heroWhatsApp").addEventListener("click", () => {
     }
   );
   document.querySelector("#contact").scrollIntoView({ behavior: "smooth" });
+});
+
+document.querySelector("#photographyWhatsApp")?.addEventListener("click", () => {
+  openWhatsapp(
+    `Hello ${content.studio.shortName}, I am interested in adding photography or video coverage to my digital invitation.`,
+    document.querySelector("#contactStatus"),
+    { type: "Photography WhatsApp", title: "Photography coverage request", summary: "Invitation customer photography upgrade" }
+  );
 });
 
 document.querySelector("#contactWhatsApp").addEventListener("click", () => {
