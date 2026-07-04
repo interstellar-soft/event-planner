@@ -2236,6 +2236,107 @@ textarea:focus {
   }
 }
 
+/* Flagship invitation art direction */
+.invite-entrance-card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: min(560px, 92vw) !important;
+  padding: clamp(42px, 8vw, 78px) clamp(24px, 7vw, 68px);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  background: rgba(15, 18, 19, 0.58);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  animation: invite-card-arrival 900ms cubic-bezier(.2,.75,.2,1) both;
+}
+
+.invite-entrance-mark {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 22px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+.invite-entrance-mark::after { content: "✦"; font-size: 1.25rem; }
+.invite-entrance-prompt { margin: -12px 0 24px; color: rgba(255,255,255,.72); font-family: Georgia, serif; font-size: .9rem; font-style: italic; }
+.invite-entrance .button { min-width: 190px; border: 1px solid currentColor; background: transparent; color: inherit; }
+.invite-entrance.opened .invite-entrance-card { transform: scale(1.04); opacity: 0; transition: transform 800ms ease, opacity 600ms ease; }
+
+.invite-story-section { opacity: 0; transform: translateY(28px); transition: opacity 800ms ease, transform 800ms cubic-bezier(.2,.7,.2,1); }
+.invite-story-section.is-revealed { opacity: 1; transform: none; }
+
+/* Midnight Oud — black-tie cinema, brass lines, warm spotlight. */
+.invite-template-midnight-oud { --flagship-ink: #f4ead8; background-color: #090d0f; }
+.invite-template-midnight-oud .invite-hero::after { background: radial-gradient(circle at 50% 38%, transparent 0 18%, rgba(4,7,8,.5) 58%, #070a0b 100%); }
+.invite-template-midnight-oud .invite-public-card { border: 1px solid rgba(210,168,94,.55); background: linear-gradient(145deg, rgba(20,25,27,.93), rgba(8,11,12,.88)); box-shadow: 0 40px 130px #000; }
+.invite-template-midnight-oud .invite-public-card h1 { color: #f8eddb; font-size: clamp(3.4rem, 9vw, 6.8rem); letter-spacing: -.045em; }
+.invite-template-midnight-oud .invite-decoration::before,
+.invite-template-midnight-oud .invite-decoration::after { content: ""; position: absolute; left: 50%; width: 1px; height: 72px; background: linear-gradient(transparent, var(--template-accent)); }
+.invite-template-midnight-oud .invite-decoration::before { top: 22px; }
+.invite-template-midnight-oud .invite-decoration::after { bottom: 22px; transform: rotate(180deg); }
+.invite-template-midnight-oud .invite-story-section { color: var(--flagship-ink); background: #0b1012; }
+.invite-template-midnight-oud .invite-story-section:nth-of-type(even) { background: #111719; }
+.invite-template-midnight-oud .invite-story-section h2 { color: #f8eddb; }
+.invite-template-midnight-oud .invite-location-grid article,
+.invite-template-midnight-oud .public-rsvp-form { border-color: rgba(210,168,94,.25); background: rgba(255,255,255,.025); }
+.invite-template-midnight-oud .invite-entrance-card { border-color: rgba(210,168,94,.6); background: rgba(7,10,11,.82); }
+
+/* Sage Majlis — Lebanese hospitality, botanical corners, airy bilingual calm. */
+.invite-template-sage-majlis .invite-hero::after { background: linear-gradient(180deg, rgba(20,47,39,.12), rgba(20,47,39,.5)); }
+.invite-template-sage-majlis .invite-public-card { border: 8px double rgba(47,123,104,.42); background: rgba(250,252,245,.94); box-shadow: 0 35px 100px rgba(20,58,48,.28); }
+.invite-template-sage-majlis .invite-public-card h1 { color: #245f50; font-size: clamp(3.1rem, 8vw, 5.8rem); }
+.invite-template-sage-majlis .invite-decoration span { position: absolute; width: 70px; height: 150px; border: solid var(--template-accent); opacity: .25; }
+.invite-template-sage-majlis .invite-decoration span:nth-child(1) { top: 18px; left: 22px; border-width: 2px 0 0 2px; border-radius: 80px 0 0; transform: rotate(-8deg); }
+.invite-template-sage-majlis .invite-decoration span:nth-child(2) { right: 22px; bottom: 18px; border-width: 0 2px 2px 0; border-radius: 0 0 80px; transform: rotate(-8deg); }
+.invite-template-sage-majlis .invite-story-section { background: #f7faf4; }
+.invite-template-sage-majlis .invite-story-section:nth-of-type(even) { background: #e7efe9; }
+.invite-template-sage-majlis .invite-agenda-list time { font-family: Georgia, serif; font-style: italic; }
+.invite-template-sage-majlis .invite-entrance-card { border: 3px double rgba(255,255,255,.65); background: rgba(30,80,67,.72); border-radius: 180px 180px 10px 10px; }
+
+/* Cathedral Gold — sacred symmetry, luminous stone, chapel-window geometry. */
+.invite-template-cathedral-gold .invite-hero::after { background: linear-gradient(180deg, rgba(58,47,28,.08), rgba(58,47,28,.38)); }
+.invite-template-cathedral-gold .invite-public-card { border-radius: 280px 280px 12px 12px; background: linear-gradient(160deg, rgba(255,253,247,.97), rgba(235,226,205,.94)); box-shadow: 0 35px 90px rgba(71,55,27,.28), inset 0 0 0 1px rgba(154,116,54,.28); }
+.invite-template-cathedral-gold .invite-public-card h1 { color: #725326; font-size: clamp(3rem, 8vw, 5.8rem); }
+.invite-template-cathedral-gold .invite-decoration::before { inset: 25px; border: 1px solid rgba(154,116,54,.48); border-radius: 250px 250px 6px 6px; }
+.invite-template-cathedral-gold .invite-decoration::after { content: "✦"; top: 48px; font-size: 1.35rem; text-shadow: 0 0 24px #fff4c7; }
+.invite-template-cathedral-gold .invite-story-section { background: #fffcf5; }
+.invite-template-cathedral-gold .invite-story-section:nth-of-type(even) { background: linear-gradient(90deg,#eee5d2,#fffaf0 50%,#eee5d2); }
+.invite-template-cathedral-gold .invite-section-kicker { letter-spacing: .2em; }
+.invite-template-cathedral-gold .invite-entrance-card { border-radius: 260px 260px 10px 10px; border-color: rgba(255,240,196,.68); background: rgba(74,59,35,.62); }
+
+/* Disco Bloom — expressive poster type, confetti motion, saturated sections. */
+.invite-template-disco-bloom .invite-hero::after { background: linear-gradient(135deg, rgba(66,24,91,.18), rgba(224,54,116,.45)); }
+.invite-template-disco-bloom .invite-public-card { transform: rotate(-1deg); border: 3px solid #261435; border-radius: 4px; background: rgba(255,247,223,.94); box-shadow: 18px 18px 0 rgba(60,29,77,.82); }
+.invite-template-disco-bloom .invite-public-card h1 { color: #4c2469; font-family: Arial Black, Arial, sans-serif; font-size: clamp(3.1rem, 9vw, 6rem); line-height: .86; letter-spacing: -.07em; text-transform: uppercase; }
+.invite-template-disco-bloom .invite-decoration span { position: absolute; width: 26px; height: 70px; border-radius: 50%; background: var(--template-accent); opacity: .22; animation: disco-drift 5s ease-in-out infinite alternate; }
+.invite-template-disco-bloom .invite-decoration span:nth-child(1) { top: 7%; right: 7%; transform: rotate(35deg); }
+.invite-template-disco-bloom .invite-decoration span:nth-child(2) { bottom: 12%; left: 4%; transform: rotate(-52deg); animation-delay: -2s; }
+.invite-template-disco-bloom .invite-decoration span:nth-child(3) { top: 44%; right: 1%; transform: rotate(78deg); animation-delay: -3.5s; }
+.invite-template-disco-bloom .invite-story-section { background: #fff7df; }
+.invite-template-disco-bloom .invite-story-section:nth-of-type(even) { background: #f5a0b8; }
+.invite-template-disco-bloom .invite-story-section h2 { color: #4c2469; font-family: Arial Black, Arial, sans-serif; font-weight: 900; letter-spacing: -.045em; text-transform: uppercase; }
+.invite-template-disco-bloom .invite-entrance-card { border: 3px solid #fff; border-radius: 4px; background: rgba(74,32,96,.76); box-shadow: 16px 16px 0 rgba(255,255,255,.28); transform: rotate(-1deg); }
+
+@keyframes invite-card-arrival { from { opacity: 0; transform: translateY(24px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes disco-drift { to { translate: 0 20px; rotate: 24deg; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .invite-entrance-card, .invite-decoration span { animation: none !important; }
+  .invite-story-section { opacity: 1; transform: none; transition: none; }
+}
+
+@media (max-width: 620px) {
+  .invite-template-midnight-oud .invite-public-card,
+  .invite-template-sage-majlis .invite-public-card,
+  .invite-template-cathedral-gold .invite-public-card,
+  .invite-template-disco-bloom .invite-public-card { padding-inline: 26px; }
+  .invite-template-disco-bloom .invite-public-card { box-shadow: 8px 8px 0 rgba(60,29,77,.78); transform: none; }
+  .invite-entrance-card { padding-block: 42px; }
+}
+
 /* Cinematic invitation experience */
 .experience-editor {
   border: 1px solid var(--line);

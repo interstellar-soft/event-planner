@@ -613,7 +613,7 @@ function invitePage(invite, { adminPreview = false, clientPreview = false, templ
   <body class="invite-public-body invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)} ${videoUrl ? "has-invite-video" : ""}" style="${templateStyle}">
     ${clientPreview ? `<a class="invite-back-to-studio" href="/studio/${escapeHtml(invite.clientToken)}">Back to studio</a>` : ""}
     ${bilingual ? `<button class="invite-language-toggle" id="inviteLanguageToggle" type="button" aria-label="عرض النسخة العربية">AR</button>` : ""}
-    ${hasEntrance ? `<div class="invite-entrance" id="inviteEntrance"><div><p>${escapeHtml(invite.eventType || "A special celebration")}</p><h1>${title}</h1><button class="button primary" id="enterInvitation" type="button">Open invitation</button></div></div>` : ""}
+    ${hasEntrance ? `<div class="invite-entrance" id="inviteEntrance"><div class="invite-entrance-card"><span class="invite-entrance-mark" aria-hidden="true"></span><p>${escapeHtml(invite.eventType || "A special celebration")}</p><h1>${title}</h1><span class="invite-entrance-prompt">A private invitation awaits</span><button class="button primary" id="enterInvitation" type="button">Open invitation</button></div></div>` : ""}
     <main class="invite-public-page">
       <section class="invite-hero">
         ${videoUrl ? `<video class="invite-hero-video" id="inviteHeroVideo" muted loop playsinline preload="metadata" ${videoPosterUrl ? `poster="${escapeHtml(videoPosterUrl)}"` : ""}><source src="${escapeHtml(videoUrl)}" /></video>` : ""}

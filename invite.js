@@ -7,6 +7,7 @@ document.querySelector("#enterInvitation")?.addEventListener("click", async () =
   const audio = document.querySelector("#inviteAudio");
   entrance?.classList.add("opened");
   document.body.classList.add("invitation-opened");
+  window.setTimeout(() => entrance?.setAttribute("hidden", ""), 900);
   try {
     if (video) {
       video.muted = Boolean(audio);
@@ -15,6 +16,18 @@ document.querySelector("#enterInvitation")?.addEventListener("click", async () =
     if (audio) await audio.play();
   } catch {}
 });
+
+const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+if (!reduceMotion) {
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("is-revealed");
+      revealObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.14 });
+  document.querySelectorAll(".invite-story-section").forEach((section) => revealObserver.observe(section));
+}
 
 document.querySelector("#inviteLanguageToggle")?.addEventListener("click", (event) => {
   const button = event.currentTarget;
