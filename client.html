@@ -112,6 +112,15 @@
               <button class="button primary full" id="clientPublish" type="button" aria-describedby="clientAccessNote" hidden>Publish Invitation</button>
               <p class="client-access-note" id="clientAccessNote"></p>
               <a class="client-live-link" id="clientLiveLink" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
+              <div class="personalized-link-builder" id="personalizedLinkBuilder" hidden>
+                <label>Recipient name
+                  <input id="recipientName" placeholder="For example, Joe" maxlength="60" />
+                </label>
+                <button class="button outline full" id="createPersonalizedLink" type="button">Create Personalized Link</button>
+                <a class="client-live-link" id="personalizedGuestLink" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
+                <button class="button outline full" id="copyPersonalizedLink" type="button" hidden>Copy Link</button>
+                <p class="form-note" id="personalizedLinkMessage" role="status"></p>
+              </div>
               <div class="client-qr" id="clientQr" hidden>
                 <img id="clientQrImage" alt="Guest invitation QR code" />
                 <span>Guest invitation QR</span>

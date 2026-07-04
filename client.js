@@ -121,8 +121,10 @@ function renderClientState({ preserveFields = false } = {}) {
       ? "Payment is under review. This page updates automatically after Tony approves it."
       : "Publishing unlocks after Tony approves your payment.";
   const liveLink = document.querySelector("#clientLiveLink");
+  const personalizedBuilder = document.querySelector("#personalizedLinkBuilder");
   const qr = document.querySelector("#clientQr");
   liveLink.hidden = !invitation.publicUrl;
+  personalizedBuilder.hidden = !invitation.publicUrl;
   qr.hidden = !invitation.publicUrl;
   if (invitation.publicUrl) {
     liveLink.href = invitation.publicUrl;
@@ -135,6 +137,43 @@ function renderClientState({ preserveFields = false } = {}) {
   renderClientMedia();
   renderRsvpDashboard();
 }
+
+function personalizedGuestUrl() {
+  const name = document.querySelector("#recipientName").value.trim();
+  if (!name || !clientState?.invitation?.publicUrl) return null;
+  const url = new URL(clientState.invitation.publicUrl, window.location.origin);
+  url.searchParams.set("to", name.slice(0, 60));
+  return url;
+}
+
+document.querySelector("#createPersonalizedLink")?.addEventListener("click", () => {
+  const output = document.querySelector("#personalizedGuestLink");
+  const copyButton = document.querySelector("#copyPersonalizedLink");
+  const message = document.querySelector("#personalizedLinkMessage");
+  const url = personalizedGuestUrl();
+  if (!url) {
+    message.textContent = "Enter the recipient's name first.";
+    output.hidden = true;
+    copyButton.hidden = true;
+    return;
+  }
+  output.href = url.href;
+  output.textContent = url.href;
+  output.hidden = false;
+  copyButton.hidden = false;
+  message.textContent = `This envelope will be addressed to ${document.querySelector("#recipientName").value.trim()}.`;
+});
+
+document.querySelector("#copyPersonalizedLink")?.addEventListener("click", async () => {
+  const output = document.querySelector("#personalizedGuestLink");
+  const message = document.querySelector("#personalizedLinkMessage");
+  try {
+    await navigator.clipboard.writeText(output.href);
+    message.textContent = "Personalized link copied.";
+  } catch {
+    message.textContent = "Open the link above and copy it from your browser.";
+  }
+});
 
 function mediaPreview(url, type, slot) {
   if (!url) return "";

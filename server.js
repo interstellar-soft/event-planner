@@ -556,8 +556,9 @@ function serveFile(req, res) {
   });
 }
 
-function invitePage(invite, { adminPreview = false, clientPreview = false, templateDemo = false } = {}) {
+function invitePage(invite, { adminPreview = false, clientPreview = false, templateDemo = false, recipientName = "" } = {}) {
   const title = escapeHtml(invite.title);
+  const recipient = escapeHtml(String(recipientName || "").trim().slice(0, 60));
   const isPreview = adminPreview || clientPreview || templateDemo;
   const locked = clientPreview && !isPaid(invite);
   const template = templateFor(invite.templateId);
@@ -613,7 +614,7 @@ function invitePage(invite, { adminPreview = false, clientPreview = false, templ
   <body class="invite-public-body invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)} ${videoUrl ? "has-invite-video" : ""}" style="${templateStyle}">
     ${clientPreview ? `<a class="invite-back-to-studio" href="/studio/${escapeHtml(invite.clientToken)}">Back to studio</a>` : ""}
     ${bilingual ? `<button class="invite-language-toggle" id="inviteLanguageToggle" type="button" aria-label="عرض النسخة العربية">AR</button>` : ""}
-    ${hasEntrance ? `<div class="invite-entrance" id="inviteEntrance"><div class="invite-envelope-stage"><div class="invite-envelope" aria-hidden="true"><div class="invite-envelope-letter"><p>${escapeHtml(invite.eventType || "A special celebration")}</p><h1>${title}</h1><span>You are invited</span></div><div class="invite-envelope-flap"></div><div class="invite-envelope-pocket"></div><span class="invite-envelope-seal">✦</span></div><button class="invite-envelope-action" id="enterInvitation" type="button">Tap to open</button><span class="invite-entrance-prompt">Sound on · best experienced slowly</span></div></div>` : ""}
+    ${hasEntrance ? `<div class="invite-entrance" id="inviteEntrance"><div class="invite-envelope-stage"><div class="invite-envelope" aria-hidden="true"><div class="invite-envelope-letter"><p>${escapeHtml(invite.eventType || "A special celebration")}</p><h1>${title}</h1><span>You are invited</span></div><div class="invite-envelope-flap"></div><div class="invite-envelope-pocket"></div>${recipient ? `<div class="invite-envelope-recipient"><span>Especially for</span><strong>${recipient}</strong></div>` : ""}<span class="invite-envelope-seal">✦</span></div><button class="invite-envelope-action" id="enterInvitation" type="button">Tap to open</button><span class="invite-entrance-prompt">Sound on · best experienced slowly</span></div></div>` : ""}
     <main class="invite-public-page">
       <section class="invite-hero">
         ${videoUrl ? `<video class="invite-hero-video" id="inviteHeroVideo" muted loop playsinline preload="metadata" ${videoPosterUrl ? `poster="${escapeHtml(videoPosterUrl)}"` : ""}><source src="${escapeHtml(videoUrl)}" /></video>` : ""}
@@ -1150,7 +1151,7 @@ const server = http.createServer((req, res) => {
       status: "published",
       payment: { status: "paid" }
     };
-    send(res, 200, invitePage(demoInvite, { templateDemo: true }), { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+    send(res, 200, invitePage(demoInvite, { templateDemo: true, recipientName: url.searchParams.get("to") || url.searchParams.get("guest") || "" }), { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
     return;
   }
 
@@ -1168,7 +1169,7 @@ const server = http.createServer((req, res) => {
       send(res, 404, "This invitation has not been published yet.", { "Content-Type": "text/plain; charset=utf-8" });
       return;
     }
-    send(res, 200, invitePage(invite, { adminPreview, clientPreview }), { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+    send(res, 200, invitePage(invite, { adminPreview, clientPreview, recipientName: url.searchParams.get("to") || url.searchParams.get("guest") || "" }), { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
     return;
   }
 

@@ -1776,6 +1776,15 @@ textarea:focus {
   font-weight: 850;
 }
 
+.personalized-link-builder {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.personalized-link-builder[hidden] { display: none; }
+
 .client-access-note {
   min-height: 20px;
   margin: -6px 0 0;
@@ -2318,6 +2327,39 @@ textarea:focus {
   transition: opacity 300ms ease, transform 400ms ease;
 }
 
+.invite-envelope-recipient {
+  position: absolute;
+  z-index: 5;
+  top: 18%;
+  left: 50%;
+  display: grid;
+  justify-items: center;
+  width: 72%;
+  color: color-mix(in srgb, var(--template-accent) 82%, #2e2922);
+  text-align: center;
+  transform: translateX(-50%);
+  transition: opacity 300ms ease, transform 500ms ease;
+}
+
+.invite-envelope-recipient span {
+  font-size: .58rem;
+  font-weight: 900;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.invite-envelope-recipient strong {
+  max-width: 100%;
+  margin-top: 5px;
+  overflow: hidden;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.55rem, 6vw, 2.7rem);
+  font-weight: 500;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .invite-envelope-action {
   margin-top: 30px;
   border: 1px solid rgba(255,255,255,.7);
@@ -2339,6 +2381,7 @@ textarea:focus {
 .invite-entrance-prompt { margin-top: 13px; color: rgba(255,255,255,.72); font-family: Georgia, serif; font-size: .82rem; font-style: italic; }
 .invite-entrance.opening .invite-envelope-flap { transform: rotateX(180deg); }
 .invite-entrance.opening .invite-envelope-seal { opacity: 0; transform: translate(-50%,-80%) scale(.7); }
+.invite-entrance.opening .invite-envelope-recipient { opacity: 0; transform: translate(-50%,-18px); }
 .invite-entrance.opening .invite-envelope-letter { z-index: 6; box-shadow: 0 30px 80px rgba(0,0,0,.35); transform: translateY(-42%) scale(1.04); }
 .invite-entrance.opened { opacity: 0; transition: opacity 600ms ease; }
 
