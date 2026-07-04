@@ -2241,6 +2241,9 @@ textarea:focus {
   display: grid;
   justify-items: center;
   width: min(580px, 94vw) !important;
+  margin-inline: auto;
+  box-sizing: border-box;
+  padding-inline: 16px;
   perspective: 1200px;
   animation: invite-card-arrival 900ms cubic-bezier(.2,.75,.2,1) both;
 }
@@ -2249,7 +2252,7 @@ textarea:focus {
   --envelope-paper: #e9dfcb;
   --envelope-shadow: #c8b89c;
   position: relative;
-  width: min(480px, 86vw);
+  width: min(480px, 100%);
   aspect-ratio: 1.5 / 1;
   filter: drop-shadow(0 30px 32px rgba(0,0,0,.34));
   transform-style: preserve-3d;
@@ -2543,6 +2546,7 @@ textarea:focus {
   z-index: 100;
   display: grid;
   place-items: center;
+  overflow: hidden;
   background:
     linear-gradient(180deg, rgba(12, 16, 18, 0.2), rgba(12, 16, 18, 0.82)),
     var(--invite-cover) center / cover;
@@ -2594,17 +2598,17 @@ textarea:focus {
   opacity: 0;
 }
 
-.invite-entrance div {
+.invite-entrance-card div {
   width: min(540px, 100%);
 }
 
-.invite-entrance p {
+.invite-entrance-card p {
   font-size: 0.8rem;
   font-weight: 900;
   text-transform: uppercase;
 }
 
-.invite-entrance h1 {
+.invite-entrance-card h1 {
   margin: 12px 0 26px;
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(3rem, 9vw, 6.5rem);
