@@ -6,6 +6,17 @@ const templateCategoryOrder = ["Wedding", "Baptism", "First Communion", "Engagem
 const eventTypeByCategory = { Wedding: "Wedding Celebration", Baptism: "Baptism", "First Communion": "First Communion", Engagement: "Engagement", Birthday: "Birthday", Business: "Corporate Event", "Other Celebrations": "Other Celebration" };
 let activeTemplateFilter = "";
 
+function absoluteGuestUrl(name) {
+  if (!name || !clientState?.invitation?.publicUrl) return null;
+  const url = new URL(clientState.invitation.publicUrl, window.location.origin);
+  url.searchParams.set("to", String(name).trim().slice(0, 60));
+  return url;
+}
+
+function guestWhatsappMessage(name, url) {
+  return `Hi ${name}, your invitation is ready:\n${url}\n\nTap the envelope to open it.`;
+}
+
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({
     "&": "&amp;",
@@ -135,15 +146,36 @@ function renderClientState({ preserveFields = false } = {}) {
 
   renderPaymentPanel();
   renderClientMedia();
+  renderClientProgress();
+  renderTemplateCatalog();
   renderRsvpDashboard();
+}
+
+function renderClientProgress() {
+  const invitation = clientState.invitation;
+  const paid = invitation.paid;
+  const published = Boolean(invitation.publicUrl);
+  const steps = [
+    { label: "Template selected", done: Boolean(invitation.templateId), hint: invitation.templateName || invitation.packageName },
+    { label: "Event details", done: Boolean(invitation.title && invitation.eventDate && invitation.venue), hint: "Title, date, and venue" },
+    { label: "Story media", done: Boolean(invitation.videoUrl || invitation.videoPosterUrl || (invitation.galleryUrls || []).length), hint: "Video, poster, or gallery" },
+    { label: "RSVP settings", done: invitation.showRsvp !== false, hint: invitation.showRsvp === false ? "RSVP is off" : "RSVP collection is on" },
+    { label: "Payment review", done: paid, hint: paid ? "Approved" : paymentStatus(invitation) === "submitted" ? "Submitted to Tony" : "Submit payment reference" },
+    { label: "Guest links", done: published, hint: published ? "Public link is ready" : "Ready after publishing" }
+  ];
+  const complete = steps.filter((step) => step.done).length;
+  document.querySelector("#clientProgressSummary").textContent = `${complete} of ${steps.length} complete`;
+  document.querySelector("#clientProgressList").innerHTML = steps.map((step) => `
+    <article class="${step.done ? "done" : ""}">
+      <span>${step.done ? "✓" : "○"}</span>
+      <div><strong>${escapeHtml(step.label)}</strong><small>${escapeHtml(step.hint || "")}</small></div>
+    </article>
+  `).join("");
 }
 
 function personalizedGuestUrl() {
   const name = document.querySelector("#recipientName").value.trim();
-  if (!name || !clientState?.invitation?.publicUrl) return null;
-  const url = new URL(clientState.invitation.publicUrl, window.location.origin);
-  url.searchParams.set("to", name.slice(0, 60));
-  return url;
+  return absoluteGuestUrl(name);
 }
 
 document.querySelector("#createPersonalizedLink")?.addEventListener("click", () => {
@@ -161,6 +193,7 @@ document.querySelector("#createPersonalizedLink")?.addEventListener("click", () 
   output.textContent = url.href;
   output.hidden = false;
   copyButton.hidden = false;
+  document.querySelector("#copyPersonalizedWhatsapp").hidden = false;
   message.textContent = `This envelope will be addressed to ${document.querySelector("#recipientName").value.trim()}.`;
 });
 
@@ -172,6 +205,43 @@ document.querySelector("#copyPersonalizedLink")?.addEventListener("click", async
     message.textContent = "Personalized link copied.";
   } catch {
     message.textContent = "Open the link above and copy it from your browser.";
+  }
+});
+
+document.querySelector("#copyPersonalizedWhatsapp")?.addEventListener("click", async () => {
+  const output = document.querySelector("#personalizedGuestLink");
+  const message = document.querySelector("#personalizedLinkMessage");
+  const name = document.querySelector("#recipientName").value.trim() || "there";
+  try {
+    await navigator.clipboard.writeText(guestWhatsappMessage(name, output.href));
+    message.textContent = "WhatsApp message copied.";
+  } catch {
+    message.textContent = "Copy the link above and send it on WhatsApp.";
+  }
+});
+
+document.querySelector("#createGuestListLinks")?.addEventListener("click", async () => {
+  const list = document.querySelector("#guestLinkList");
+  const message = document.querySelector("#personalizedLinkMessage");
+  const names = document.querySelector("#guestNames").value.split(/\r?\n|,/).map((name) => name.trim()).filter(Boolean).slice(0, 40);
+  if (!names.length || !clientState?.invitation?.publicUrl) {
+    list.innerHTML = "";
+    message.textContent = clientState?.invitation?.publicUrl ? "Add at least one guest name." : "Guest links unlock after Tony publishes the invitation.";
+    return;
+  }
+  list.innerHTML = names.map((name) => {
+    const url = absoluteGuestUrl(name);
+    return `<article><strong>${escapeHtml(name)}</strong><a href="${escapeHtml(url.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url.href)}</a></article>`;
+  }).join("");
+  const batch = names.map((name) => {
+    const url = absoluteGuestUrl(name);
+    return `${name}: ${url.href}`;
+  }).join("\n");
+  try {
+    await navigator.clipboard.writeText(batch);
+    message.textContent = `${names.length} guest link${names.length === 1 ? "" : "s"} generated and copied.`;
+  } catch {
+    message.textContent = `${names.length} guest link${names.length === 1 ? "" : "s"} generated.`;
   }
 });
 
@@ -266,6 +336,7 @@ function renderTemplateCatalog() {
         <b>$${template.price}</b>
       </div>
       <p>${escapeHtml(template.description)}</p>
+      <a class="button outline full" href="/template-preview/${encodeURIComponent(template.id)}?to=You" target="_blank" rel="noopener noreferrer">Preview reveal</a>
       <button class="button ${selected ? "primary" : "outline"} full" type="button" data-select-template="${escapeHtml(template.id)}" ${selected || selectionLocked ? "disabled" : ""}>${selected ? "Selected" : selectionLocked ? "Selection locked" : "Choose template"}</button>
     </article>`;
   }).join("");
@@ -374,6 +445,20 @@ document.querySelector("#paymentClaimForm").addEventListener("submit", async (ev
   } catch (error) {
     message.textContent = error.message;
   }
+});
+
+document.querySelector("#clientTemplateFilter").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-template-filter]");
+  if (!button) return;
+  activeTemplateFilter = button.dataset.templateFilter;
+  renderTemplateCatalog();
+});
+
+document.querySelector("#clientTemplateGrid").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-select-template]");
+  if (!button) return;
+  clientState.invitation.templateId = button.dataset.selectTemplate;
+  await saveClientDetails("Template updated. Open the preview to review the new design.");
 });
 
 document.querySelector("#refreshClient").addEventListener("click", loadClientStudio);

@@ -26,6 +26,14 @@ let selectedInvitationTemplate = "ivory-garden";
 let activeStorefrontCategory = "Wedding";
 let previewRefreshTimer = null;
 
+function templateFeatureBadges(template) {
+  const badges = [template.tier, template.experience || "Image"];
+  if (template.tier === "Premium" || template.tier === "Bespoke") badges.push("Cinematic reveal");
+  if (["Wedding", "Engagement", "Business"].includes(template.category)) badges.push("Bilingual ready");
+  if (template.tier !== "Essential") badges.push("Guest story");
+  return [...new Set(badges)].slice(0, 4);
+}
+
 function getPathValue(source, path) {
   return path.split(".").reduce((value, key) => value?.[key], source);
 }
@@ -66,16 +74,20 @@ function renderTemplates() {
       (template) => {
         const sample = templateSample(template);
         return `
-        <article class="template-card">
+        <article class="template-card tier-${escapeHtml(String(template.tier || "").toLowerCase())}">
           <div class="template-art ${template.image ? "has-cover" : ""} invite-template-${escapeHtml(template.id)} invite-layout-${escapeHtml(template.layout)}" style="--template-accent:${escapeHtml(template.accent)};--template-canvas:${escapeHtml(template.canvas)};--template-paper:${escapeHtml(template.paper)};--template-image:url('${escapeHtml(template.image || "")}')">
             <div><span>${escapeHtml(sample.kicker)}</span><strong>${escapeHtml(sample.name)}</strong><small>${escapeHtml(sample.date)}</small></div>
           </div>
           <footer>
             <span class="template-tier">${escapeHtml(template.category)} · ${escapeHtml(template.tier)} · ${escapeHtml(template.experience || "Image")}</span>
             <h3>${template.name}</h3>
-            <p>${template.description}</p>
+            <p>${escapeHtml(template.description)}</p>
+            <div class="template-badges">${templateFeatureBadges(template).map((badge) => `<span>${escapeHtml(badge)}</span>`).join("")}</div>
             <p><strong>$${template.price}</strong></p>
-            <button class="button" type="button" data-template="${escapeHtml(template.id)}">Choose template</button>
+            <div class="template-card-actions">
+              <button class="button outline" type="button" data-preview-template="${escapeHtml(template.id)}">Preview reveal</button>
+              <button class="button" type="button" data-template="${escapeHtml(template.id)}">Use this design</button>
+            </div>
           </footer>
         </article>
       `;
@@ -198,6 +210,15 @@ function updatePreview() {
   previewRefreshTimer = window.setTimeout(() => {
     storefrontPreviewFrame.src = `/template-preview/${encodeURIComponent(template.id)}?${params}`;
   }, 250);
+}
+
+function previewTemplate(templateId) {
+  selectedInvitationTemplate = templateId || "ivory-garden";
+  document.querySelector("#packageName").value = selectedInvitationTemplate;
+  const selected = invitationTemplates.find((template) => template.id === selectedInvitationTemplate);
+  if (selected && eventTypeByCategory[selected.category]) document.querySelector("#inviteEventType").value = eventTypeByCategory[selected.category];
+  updatePreview();
+  document.querySelector("#preview").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function showStudioRecovery(clientUrl, message = "Your invitation is already in progress") {
@@ -324,6 +345,11 @@ document.addEventListener("click", (event) => {
 });
 
 templateGrid.addEventListener("click", (event) => {
+  const previewButton = event.target.closest("[data-preview-template]");
+  if (previewButton) {
+    previewTemplate(previewButton.dataset.previewTemplate);
+    return;
+  }
   const button = event.target.closest("[data-template]");
   if (!button) return;
   selectedInvitationTemplate = button.dataset.template || "ivory-garden";
@@ -339,6 +365,13 @@ document.querySelector("#templateCategoryNav").addEventListener("click", (event)
   if (!button) return;
   activeStorefrontCategory = button.dataset.storefrontCategory;
   renderTemplates();
+});
+
+document.querySelector("#heroDemoButton")?.addEventListener("click", () => {
+  const screen = document.querySelector("#heroDemoScreen");
+  const button = document.querySelector("#heroDemoButton");
+  screen.classList.toggle("opened");
+  button.textContent = screen.classList.contains("opened") ? "Replay reveal" : "Tap to open";
 });
 
 orderForm.addEventListener("submit", async (event) => {

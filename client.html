@@ -31,8 +31,28 @@
           </div>
         </header>
 
+        <section class="client-progress-card" aria-label="Invitation setup progress">
+          <div class="client-section-heading">
+            <div>
+              <p class="kicker">Setup checklist</p>
+              <h2>Finish your invitation step by step</h2>
+            </div>
+            <span id="clientProgressSummary">0 of 6 complete</span>
+          </div>
+          <div class="client-progress-list" id="clientProgressList"></div>
+        </section>
+
         <div class="client-studio-layout">
           <section class="client-workspace">
+            <section class="client-template-catalog">
+              <div class="client-section-heading">
+                <div><p class="kicker">Design selection</p><h2>Choose or compare templates</h2></div>
+                <span id="selectedTemplateSummary"></span>
+              </div>
+              <div class="client-template-filter" id="clientTemplateFilter"></div>
+              <div class="client-template-grid" id="clientTemplateGrid"></div>
+            </section>
+
             <form class="client-editor-form" id="clientEditorForm">
               <div class="client-section-heading">
                 <h2>Invitation details</h2>
@@ -119,6 +139,12 @@
                 <button class="button outline full" id="createPersonalizedLink" type="button">Create Personalized Link</button>
                 <a class="client-live-link" id="personalizedGuestLink" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
                 <button class="button outline full" id="copyPersonalizedLink" type="button" hidden>Copy Link</button>
+                <button class="button outline full" id="copyPersonalizedWhatsapp" type="button" hidden>Copy WhatsApp Message</button>
+                <label>Guest names
+                  <textarea id="guestNames" rows="4" placeholder="Joe&#10;Maya&#10;Karim"></textarea>
+                </label>
+                <button class="button outline full" id="createGuestListLinks" type="button">Generate Guest Links</button>
+                <div class="guest-link-list" id="guestLinkList"></div>
                 <p class="form-note" id="personalizedLinkMessage" role="status"></p>
               </div>
               <div class="client-qr" id="clientQr" hidden>

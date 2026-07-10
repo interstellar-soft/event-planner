@@ -35,20 +35,56 @@
           <h1>Your invitation deserves more than a static card.</h1>
           <p>Create a beautiful mobile invitation with video, Arabic and English, countdown, maps, photo gallery, RSVP tracking, and effortless WhatsApp sharing.</p>
           <div class="hero-actions">
-            <a class="button primary" href="#templates">Browse Templates</a>
-            <a class="button secondary" href="#order">Create Your Invitation</a>
+            <a class="button primary" href="#instant-demo">Tap the Demo</a>
+            <a class="button secondary" href="#templates">Browse Templates</a>
           </div>
         </div>
+        <aside class="hero-live-demo" id="instant-demo" aria-label="Interactive invitation demo">
+          <div class="hero-demo-phone">
+            <div class="phone-top"></div>
+            <div class="hero-demo-screen" id="heroDemoScreen">
+              <div class="hero-demo-backdrop"></div>
+              <div class="hero-demo-envelope" id="heroDemoEnvelope">
+                <div class="hero-demo-flap"></div>
+                <div class="hero-demo-pocket"></div>
+                <div class="hero-demo-address"><span>Especially for</span><strong>You</strong></div>
+                <span class="hero-demo-seal">✦</span>
+              </div>
+              <div class="hero-demo-card">
+                <span>Prepared especially for</span>
+                <strong>You</strong>
+                <h3>Maya &amp; Karim</h3>
+                <p>Saturday, 18 July 2026</p>
+              </div>
+              <button class="hero-demo-button" id="heroDemoButton" type="button">Tap to open</button>
+            </div>
+          </div>
+          <a class="button demo-cta" href="#templates">Create one like this</a>
+        </aside>
       </section>
 
       <section class="conversion-strip" aria-label="Quick conversion options">
         <div>
-          <strong>Choose it. Personalize it. Preview it before you pay.</strong>
-          <span>Your private studio keeps every detail, image, video, and guest response in one place.</span>
+          <strong>See the reveal first. Then choose, personalize, and publish.</strong>
+          <span>The journey starts with a working invitation preview, not a long form.</span>
         </div>
         <div class="conversion-actions">
           <a class="button small" href="#templates">View Designs</a>
           <a class="button small" href="#pricing">See Pricing</a>
+        </div>
+      </section>
+
+      <section class="section journey-preview">
+        <div class="section-heading center">
+          <p class="kicker">The guest journey</p>
+          <h2>From WhatsApp link to RSVP in seconds.</h2>
+          <p>Guests open a personalized envelope, view the event story, check the map and timing, then reply from the same invitation.</p>
+        </div>
+        <div class="journey-steps">
+          <article><span>01</span><h3>Personalized link</h3><p>Send each guest a link addressed with their name.</p></article>
+          <article><span>02</span><h3>Cinematic reveal</h3><p>The envelope opens into a full invitation experience.</p></article>
+          <article><span>03</span><h3>Event details</h3><p>Date, venue, map, gallery, language, and countdown stay together.</p></article>
+          <article><span>04</span><h3>RSVP tracked</h3><p>Responses collect in the private studio for Tony and the client.</p></article>
         </div>
       </section>
 
@@ -130,7 +166,8 @@
         <form class="order-panel" id="orderForm">
           <div class="section-heading compact">
             <p class="kicker">Start creating</p>
-            <h2>Personalize your invitation</h2>
+            <h2>Start with the basics</h2>
+            <p class="form-intro">Create your private studio now. You can add venue details, maps, Arabic copy, media, and guest names inside the studio after this step.</p>
           </div>
           <div class="studio-recovery" id="studioRecovery" hidden>
             <strong>Your invitation is already in progress</strong>
@@ -149,10 +186,6 @@
             Event title
             <input id="eventTitle" name="eventTitle" placeholder="Names or celebration title" required />
           </label>
-          <div class="form-field-pair">
-            <label>Event date <input id="eventDate" name="eventDate" type="date" required /></label>
-            <label>Event time <input id="eventTime" name="eventTime" type="time" required /></label>
-          </div>
           <label>
             Event type
             <select id="inviteEventType" name="inviteEventType">
@@ -166,17 +199,26 @@
             </select>
           </label>
           <label>
-            Venue
-            <input id="venue" name="venue" placeholder="Venue and city" required />
-          </label>
-          <label>
-            Location link
-            <input id="mapUrl" name="mapUrl" placeholder="Google Maps link" />
-          </label>
-          <label>
             Invitation template
             <select id="packageName" name="packageName"></select>
           </label>
+          <details class="optional-details">
+            <summary>Add date, venue, and map now</summary>
+            <div class="optional-details-grid">
+              <div class="form-field-pair">
+                <label>Event date <input id="eventDate" name="eventDate" type="date" /></label>
+                <label>Event time <input id="eventTime" name="eventTime" type="time" /></label>
+              </div>
+              <label>
+                Venue
+                <input id="venue" name="venue" placeholder="Venue and city" />
+              </label>
+              <label>
+                Location link
+                <input id="mapUrl" name="mapUrl" placeholder="Google Maps link" />
+              </label>
+            </div>
+          </details>
           <fieldset>
             <legend>Language request</legend>
             <label class="check"><input type="checkbox" value="Bilingual Arabic / English" /> Arabic and English</label>
