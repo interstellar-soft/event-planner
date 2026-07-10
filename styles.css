@@ -2329,23 +2329,30 @@ textarea:focus {
 
 .invite-envelope-recipient {
   position: absolute;
-  z-index: 5;
-  top: 18%;
+  z-index: 7;
+  top: 14%;
   left: 50%;
   display: grid;
   justify-items: center;
-  width: 72%;
-  color: color-mix(in srgb, var(--template-accent) 82%, #2e2922);
+  width: min(72%, 360px);
+  padding: 11px 18px 10px;
+  border: 1px solid color-mix(in srgb, var(--template-accent) 20%, rgba(255,255,255,.65));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--envelope-paper) 86%, rgba(255,255,255,.82));
+  color: color-mix(in srgb, var(--template-accent) 74%, #241d16);
+  box-shadow: 0 10px 26px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.38);
   text-align: center;
   transform: translateX(-50%);
   transition: opacity 300ms ease, transform 500ms ease;
+  pointer-events: none;
 }
 
 .invite-envelope-recipient span {
   font-size: .58rem;
   font-weight: 900;
-  letter-spacing: .18em;
+  letter-spacing: .2em;
   text-transform: uppercase;
+  opacity: .84;
 }
 
 .invite-envelope-recipient strong {
@@ -2358,6 +2365,30 @@ textarea:focus {
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.invite-envelope.is-addressed .invite-envelope-seal {
+  top: 60%;
+}
+
+.invite-recipient-line {
+  margin: 0 0 10px;
+  color: var(--template-accent);
+  font-size: .8rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.invite-recipient-line strong {
+  display: block;
+  margin-top: 6px;
+  color: inherit;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.7rem, 4.2vw, 2.8rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .invite-envelope-action {
